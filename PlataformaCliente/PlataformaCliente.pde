@@ -24,6 +24,15 @@ boolean quizSubmitted = false;
 int quizScore = 0, quizTotal = 0;
 boolean[] quizResults;
 
+// Reconnection
+boolean wasConnected = false;
+int reconnectAttempts = 0;
+int lastReconnectTry = 0;
+final int RECONNECT_INTERVAL = 60; // frames (~1s at 60fps)
+String savedServerIP = "";
+int savedServerPort = 5204;
+String savedGrado = "", savedNumero = "", savedNombre = "";
+
 // UI Controls
 Button btnConnect, btnDisconnect, btnPrevQuestion, btnNextQuestion, btnSubmitQuiz, btnBackToWorkshops;
 TextField tfServerIP, tfPort, tfGrado, tfNumero, tfNombre;
@@ -56,7 +65,12 @@ void draw() {
   layout();
   background(235);
 
-  if (isConnected) handleNetwork();
+  if (isConnected) {
+    handleNetwork();
+    wasConnected = true;
+  } else if (wasConnected) {
+    handleReconnection();
+  }
 
   if (currentScreen.equals("conectar")) drawLoginScreen();
   else if (currentScreen.equals("talleres")) drawWorkshopsScreen();
@@ -312,11 +326,16 @@ void connectToServer() {
   if (client != null) { client.stop(); client = null; }
   isConnected = false;
   try {
-    serverIP = tfServerIP.text;
-    serverPort = parseInt(tfPort.text);
-    studentGrado = tfGrado.text;
-    studentNumero = tfNumero.text;
-    studentNombre = tfNombre.text;
+    savedServerIP = tfServerIP.text;
+    savedServerPort = parseInt(tfPort.text);
+    savedGrado = tfGrado.text;
+    savedNumero = tfNumero.text;
+    savedNombre = tfNombre.text;
+    serverIP = savedServerIP;
+    serverPort = savedServerPort;
+    studentGrado = savedGrado;
+    studentNumero = savedNumero;
+    studentNombre = savedNombre;
 
     if (studentGrado.length() == 0 || studentNumero.length() == 0 || studentNombre.length() == 0) {
       setStatus("Completa todos los campos"); return;
@@ -326,6 +345,8 @@ void connectToServer() {
 
     client = new Client(this, serverIP, serverPort);
     if (client.active()) {
+      wasConnected = true;
+      reconnectAttempts = 0;
       isConnected = true;
       currentScreen = "talleres";
       setStatus("Conectado al servidor");
@@ -352,6 +373,8 @@ void connectToServer() {
 void disconnect() {
   if (client != null) { client.stop(); client = null; }
   isConnected = false;
+  wasConnected = false;
+  reconnectAttempts = 0;
   currentScreen = "conectar";
   currentQuiz.clear();
   workshopTitles.clear();
@@ -359,11 +382,56 @@ void disconnect() {
 }
 
 void handleNetwork() {
-  if (client == null || !client.active()) return;
+  if (client == null || !client.active()) {
+    isConnected = false;
+    return;
+  }
   String msg = client.readStringUntil('\n');
   if (msg != null) {
     msg = msg.trim();
     if (msg.length() > 0) processServerMessage(msg);
+  }
+}
+
+void handleReconnection() {
+  if (frameCount - lastReconnectTry < RECONNECT_INTERVAL) return;
+  lastReconnectTry = frameCount;
+  reconnectAttempts++;
+
+  setStatus("Reconectando... (" + reconnectAttempts + "/10)");
+
+  if (reconnectAttempts > 10) {
+    wasConnected = false;
+    currentScreen = "conectar";
+    setStatus("Conexión perdida. Vuelve a conectar manualmente.");
+    return;
+  }
+
+  try {
+    if (client != null) { client.stop(); client = null; }
+    client = new Client(this, savedServerIP, savedServerPort);
+    if (client.active()) {
+      isConnected = true;
+      wasConnected = true;
+      reconnectAttempts = 0;
+      setStatus("Reconectado al servidor");
+
+      JSONObject msg = new JSONObject();
+      msg.setString("type", "connect");
+      msg.setString("nombre", savedNombre);
+      msg.setString("grado", savedGrado);
+      msg.setInt("numero", parseInt(savedNumero));
+      sendMessage(msg);
+
+      delay(100);
+      JSONObject req = new JSONObject();
+      req.setString("type", "list_workshops");
+      sendMessage(req);
+
+      if (currentScreen.equals("conectar")) currentScreen = "talleres";
+    }
+  } catch (Exception e) {
+    println("Reintento fallido: " + e.getMessage());
   }
 }
 
