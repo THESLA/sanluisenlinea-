@@ -1,0 +1,520 @@
+import processing.net.*;
+import processing.data.*;
+
+// Network
+Client client;
+String serverIP = "127.0.0.1";
+int serverPort = 5204;
+boolean isConnected = false;
+int studentId = 0;
+
+// Student data
+String studentGrado = "", studentNumero = "", studentNombre = "";
+
+// Screens
+String currentScreen = "conectar";
+
+// Data received from server
+StringList workshopTitles = new StringList();
+ArrayList<QuizQuestion> currentQuiz = new ArrayList<QuizQuestion>();
+String currentWorkshopTitle = "";
+int currentQuestionIndex = 0;
+int[] studentAnswers;
+boolean quizSubmitted = false;
+int quizScore = 0, quizTotal = 0;
+boolean[] quizResults;
+
+// UI Controls
+Button btnConnect, btnDisconnect, btnPrevQuestion, btnNextQuestion, btnSubmitQuiz, btnBackToWorkshops;
+TextField tfServerIP, tfPort, tfGrado, tfNumero, tfNombre;
+String statusMessage = "Ingresa tus datos para conectarte";
+int statusTimer = 300;
+int wsScrollOffset = 0;
+
+void setup() {
+  surface.setResizable(true);
+  windowResize(900, 700);
+  surface.setTitle("Plataforma Educativa - Alumno");
+
+  tfServerIP = new TextField(0, 0, 0, 0);
+  tfServerIP.text = serverIP;
+  tfPort = new TextField(0, 0, 0, 0);
+  tfPort.text = str(serverPort);
+  tfGrado = new TextField(0, 0, 0, 0);
+  tfNumero = new TextField(0, 0, 0, 0);
+  tfNombre = new TextField(0, 0, 0, 0);
+
+  btnConnect = new Button(0, 0, 0, 0, "Conectar");
+  btnDisconnect = new Button(0, 0, 0, 0, "Desconectar");
+  btnPrevQuestion = new Button(0, 0, 0, 0, "Anterior");
+  btnNextQuestion = new Button(0, 0, 0, 0, "Siguiente");
+  btnSubmitQuiz = new Button(0, 0, 0, 0, "Enviar");
+  btnBackToWorkshops = new Button(0, 0, 0, 0, "Volver a Talleres");
+}
+
+void draw() {
+  layout();
+  background(235);
+
+  if (isConnected) handleNetwork();
+
+  if (currentScreen.equals("conectar")) drawLoginScreen();
+  else if (currentScreen.equals("talleres")) drawWorkshopsScreen();
+  else if (currentScreen.equals("quiz")) drawQuizScreen();
+  else if (currentScreen.equals("resultados")) drawResultsScreen();
+
+  if (statusTimer > 0) {
+    fill(0);
+    textAlign(CENTER, TOP);
+    text(statusMessage, width/2, height - 30);
+    statusTimer--;
+  }
+}
+
+void layout() {
+  float cx = width / 2;
+  float fw = constrain(width * 0.4, 200, 400);
+  float fh = 28;
+  float fs = width < 600 ? 11 : 13;
+  float ts = width < 600 ? 20 : 28;
+
+  // Login screen positions
+  float ly0 = height * 0.08;
+  float ly1 = height * 0.135;
+  float rowY = height * 0.22;
+  float rowGap = 62;
+
+  // -- Login fields --
+  setTF(tfServerIP, cx - fw / 2, rowY + 22, fw, fh);
+  setTF(tfPort, cx - fw / 2, rowY + rowGap + 22, fw, fh);
+
+  float dataY = rowY + rowGap * 2 + 10;
+  setTF(tfGrado, cx - fw / 2, dataY + rowGap + 2, fw, fh);
+  setTF(tfNumero, cx - fw / 2, dataY + rowGap * 2 + 2, fw, fh);
+  setTF(tfNombre, cx - fw / 2, dataY + rowGap * 3 + 2, fw, fh);
+
+  float btnW = constrain(width * 0.18, 100, 160);
+  float btnH = constrain(height * 0.055, 30, 42);
+  setBtn(btnConnect, cx - btnW / 2, dataY + rowGap * 4 + 10, btnW, btnH);
+
+  // Workshop screen
+  setBtn(btnDisconnect, width - 150, 12, 130, 30);
+
+  // Quiz bottom buttons
+  float bby = height - 55;
+  float bbw = constrain(width * 0.16, 90, 140);
+  float bbh = 30;
+  setBtn(btnPrevQuestion, width * 0.04, bby, bbw, bbh);
+  setBtn(btnNextQuestion, width * 0.04 + bbw + 15, bby, bbw, bbh);
+  setBtn(btnSubmitQuiz, width * 0.04 + (bbw + 15) * 2, bby, bbw, bbh);
+
+  // Results button
+  setBtn(btnBackToWorkshops, width * 0.04, bby, constrain(width * 0.25, 150, 220), bbh);
+
+  textSize(fs);
+}
+
+void setTF(TextField tf, float x, float y, float w, float h) {
+  tf.x = x; tf.y = y; tf.w = w; tf.h = h;
+}
+void setBtn(Button b, float x, float y, float w, float h) {
+  b.x = x; b.y = y; b.w = w; b.h = h;
+}
+
+// ===== LOGIN SCREEN =====
+
+void drawLoginScreen() {
+  fill(60);
+  noStroke();
+  rect(0, 0, width, height);
+
+  float cx = width / 2;
+  float fw = constrain(width * 0.4, 200, 400);
+  float rowGap = 62;
+  float rowY = height * 0.22;
+  float dataY = rowY + rowGap * 2 + 10;
+
+  fill(255);
+  textAlign(CENTER, TOP);
+  float titleSize = constrain(width * 0.035, 20, 30);
+  textSize(titleSize);
+  text("Plataforma Educativa", cx, height * 0.07);
+  textSize(titleSize * 0.6);
+  text("Alumno", cx, height * 0.12);
+
+  float labelSize = constrain(width * 0.017, 11, 14);
+  textSize(labelSize);
+  textAlign(LEFT, TOP);
+
+  float lx = cx - fw / 2;
+  fill(200);
+  text("Dirección del servidor:", lx, rowY);
+  tfServerIP.draw();
+
+  text("Puerto:", lx, rowY + rowGap);
+  tfPort.draw();
+
+  fill(255, 230, 140);
+  textSize(labelSize * 1.05);
+  text("-- Datos del Alumno --", lx, dataY);
+  textSize(labelSize);
+  fill(200);
+
+  text("Grado / Sección:", lx, dataY + rowGap - 20);
+  tfGrado.draw();
+  text("Número en lista:", lx, dataY + rowGap * 2 - 20);
+  tfNumero.draw();
+  text("Primer nombre:", lx, dataY + rowGap * 3 - 20);
+  tfNombre.draw();
+
+  btnConnect.draw(color(50, 130, 200), color(80, 170, 240));
+}
+
+// ===== WORKSHOPS SCREEN =====
+
+void drawWorkshopsScreen() {
+  // Header
+  fill(60); noStroke(); rect(0, 0, width, 50);
+  float titleSize = constrain(width * 0.022, 15, 20);
+  fill(255); textAlign(LEFT, CENTER); textSize(titleSize);
+  text("Talleres Disponibles", 20, 25);
+  textAlign(RIGHT, CENTER);
+  textSize(titleSize * 0.75);
+  text(studentGrado + " - #" + studentNumero + " - " + studentNombre, width - 160, 25);
+  btnDisconnect.draw();
+
+  float pad = width * 0.05;
+  float itemH = constrain(height * 0.075, 40, 60);
+  int visibleCount = floor((height - 100) / itemH);
+  wsScrollOffset = constrain(wsScrollOffset, 0, max(0, workshopTitles.size() - visibleCount));
+
+  for (int i = wsScrollOffset; i < workshopTitles.size() && i < wsScrollOffset + visibleCount; i++) {
+    float rowY = 70 + (i - wsScrollOffset) * itemH;
+    fill(255); stroke(200); rect(pad, rowY, width - pad * 2, itemH - 6, 6);
+    fill(30); textAlign(LEFT, CENTER);
+    textSize(constrain(width * 0.02, 13, 17));
+    text(workshopTitles.get(i), pad + 15, rowY + (itemH - 6) * 0.4);
+    textSize(constrain(width * 0.014, 10, 12));
+    fill(120);
+    text("Haz clic para iniciar", pad + 15, rowY + (itemH - 6) * 0.78);
+  }
+  // Scroll arrows
+  float arrSize = constrain(width * 0.025, 14, 22);
+  if (wsScrollOffset > 0) {
+    fill(100); textAlign(CENTER, TOP); textSize(arrSize); text("\u25B2", width/2, 56);
+  }
+  if (wsScrollOffset + visibleCount < workshopTitles.size()) {
+    fill(100); textAlign(CENTER, BOTTOM); textSize(arrSize); text("\u25BC", width/2, height - 5);
+  }
+}
+
+// ===== QUIZ SCREEN =====
+
+void drawQuizScreen() {
+  fill(60); noStroke(); rect(0, 0, width, 50);
+  float titleSize = constrain(width * 0.02, 14, 18);
+  fill(255); textAlign(LEFT, CENTER); textSize(titleSize);
+  text(currentWorkshopTitle, 20, 25);
+  textAlign(RIGHT, CENTER);
+  textSize(titleSize * 0.85);
+  text("Pregunta " + (currentQuestionIndex + 1) + " de " + currentQuiz.size(), width - 20, 25);
+
+  if (currentQuiz.size() == 0) return;
+  QuizQuestion q = currentQuiz.get(currentQuestionIndex);
+
+  float qy = 75;
+  float qTextSize = constrain(width * 0.02, 13, 17);
+  fill(30); textAlign(LEFT, TOP); textSize(qTextSize);
+  float qh = textWidth(q.text) > width * 0.75 ? 120 : 60;
+  text(q.text, width * 0.05, qy, width * 0.9, qh);
+
+  float pad = width * 0.075;
+  float optH = constrain(height * 0.065, 34, 48);
+  float optSize = constrain(width * 0.017, 11, 14);
+  float optY0 = qy + qh + 15;
+
+  for (int i = 0; i < q.options.length; i++) {
+    float optY = optY0 + i * (optH + 8);
+    boolean selected = (studentAnswers[currentQuestionIndex] == i);
+    fill(selected ? color(200, 230, 255) : 255);
+    stroke(selected ? color(50, 150, 255) : 180);
+    strokeWeight(selected ? 2 : 1);
+    rect(pad, optY, width - pad * 2, optH, 6);
+
+    float radioR = constrain(width * 0.012, 7, 10);
+    fill(selected ? color(50, 150, 255) : 190);
+    noStroke();
+    ellipse(pad + radioR * 2.5, optY + optH / 2, radioR * 2, radioR * 2);
+    if (selected) {
+      fill(255);
+      ellipse(pad + radioR * 2.5, optY + optH / 2, radioR * 0.85, radioR * 0.85);
+    }
+    fill(selected ? color(20, 80, 180) : 50);
+    textAlign(LEFT, CENTER);
+    textSize(optSize);
+    text((char)('A' + i) + ". " + q.options[i], pad + radioR * 5, optY + optH / 2);
+  }
+
+  // Bottom navigation buttons
+  if (currentQuestionIndex > 0) btnPrevQuestion.draw();
+  if (currentQuestionIndex < currentQuiz.size() - 1) btnNextQuestion.draw();
+  if (!quizSubmitted) {
+    float bby = height - 55;
+    btnSubmitQuiz.draw();
+    if (currentQuestionIndex == currentQuiz.size() - 1) {
+      fill(255, 100, 100);
+      textAlign(LEFT, TOP);
+      textSize(constrain(width * 0.014, 10, 12));
+      text("Última - presiona Enviar", btnSubmitQuiz.x, bby - 18);
+    }
+  }
+}
+
+// ===== RESULTS SCREEN =====
+
+void drawResultsScreen() {
+  fill(60); noStroke(); rect(0, 0, width, 50);
+  float titleSize = constrain(width * 0.022, 15, 20);
+  fill(255); textAlign(LEFT, CENTER); textSize(titleSize);
+  text("Resultados: " + currentWorkshopTitle, 20, 25);
+
+  float boxSize = constrain(width * 0.15, 120, 200);
+  fill(255); stroke(200);
+  rect(width / 2 - boxSize / 2, 85, boxSize, boxSize * 0.4, 10);
+  fill(30); textAlign(CENTER, TOP);
+  textSize(constrain(width * 0.05, 28, 44));
+  text(quizScore + "/" + quizTotal, width / 2, 92);
+  textSize(constrain(width * 0.017, 12, 15));
+  fill(100);
+  text("Correctas", width / 2, 92 + boxSize * 0.22);
+
+  float y = 85 + boxSize * 0.4 + 20;
+  float rh = constrain(height * 0.055, 30, 40);
+  textSize(constrain(width * 0.015, 10, 13));
+  for (int i = 0; i < currentQuiz.size() && i < quizResults.length; i++) {
+    boolean correct = quizResults[i];
+    fill(correct ? color(220, 255, 220) : color(255, 220, 220));
+    stroke(correct ? color(100, 200, 100) : color(200, 100, 100));
+    rect(width * 0.05, y, width * 0.9, rh, 4);
+    fill(correct ? color(30, 120, 30) : color(180, 30, 30));
+    textAlign(LEFT, CENTER);
+    String icon = correct ? "\u2713" : "\u2717";
+    text(icon + " P" + (i+1) + ": " + currentQuiz.get(i).text, width * 0.07, y + rh / 2);
+    y += rh + 6;
+    if (y > height - 70) break;
+  }
+  btnBackToWorkshops.draw();
+}
+
+// ===== NETWORKING =====
+
+void connectToServer() {
+  if (client != null) { client.stop(); client = null; }
+  isConnected = false;
+  try {
+    serverIP = tfServerIP.text;
+    serverPort = parseInt(tfPort.text);
+    studentGrado = tfGrado.text;
+    studentNumero = tfNumero.text;
+    studentNombre = tfNombre.text;
+
+    if (studentGrado.length() == 0 || studentNumero.length() == 0 || studentNombre.length() == 0) {
+      setStatus("Completa todos los campos"); return;
+    }
+    int nro = parseInt(studentNumero);
+    if (nro <= 0) { setStatus("Número en lista inválido"); return; }
+
+    client = new Client(this, serverIP, serverPort);
+    if (client.active()) {
+      isConnected = true;
+      currentScreen = "talleres";
+      setStatus("Conectado al servidor");
+
+      JSONObject msg = new JSONObject();
+      msg.setString("type", "connect");
+      msg.setString("nombre", studentNombre);
+      msg.setString("grado", studentGrado);
+      msg.setInt("numero", nro);
+      sendMessage(msg);
+
+      delay(200);
+      JSONObject req = new JSONObject();
+      req.setString("type", "list_workshops");
+      sendMessage(req);
+    } else {
+      setStatus("No se pudo conectar al servidor");
+    }
+  } catch (Exception e) {
+    setStatus("Error: " + e.getMessage());
+  }
+}
+
+void disconnect() {
+  if (client != null) { client.stop(); client = null; }
+  isConnected = false;
+  currentScreen = "conectar";
+  currentQuiz.clear();
+  workshopTitles.clear();
+  setStatus("Desconectado");
+}
+
+void handleNetwork() {
+  if (client == null || !client.active()) return;
+  String msg = client.readStringUntil('\n');
+  if (msg != null) {
+    msg = msg.trim();
+    if (msg.length() > 0) processServerMessage(msg);
+  }
+}
+
+void processServerMessage(String msg) {
+  try {
+    JSONObject json = JSONObject.parse(msg);
+    String type = json.getString("type", "");
+    if (type.equals("connected")) {
+      studentId = json.getInt("id", 0);
+    } else if (type.equals("workshop_list")) {
+      workshopTitles.clear();
+      JSONArray arr = json.getJSONArray("workshops");
+      for (int i = 0; i < arr.size(); i++) workshopTitles.append(arr.getString(i));
+    } else if (type.equals("quiz_data")) {
+      currentWorkshopTitle = json.getString("workshop", "");
+      JSONArray qArr = json.getJSONArray("questions");
+      currentQuiz.clear();
+      for (int i = 0; i < qArr.size(); i++) {
+        JSONObject qObj = qArr.getJSONObject(i);
+        QuizQuestion q = new QuizQuestion();
+        q.text = qObj.getString("text", "");
+        JSONArray optArr = qObj.getJSONArray("options");
+        q.options = new String[optArr.size()];
+        for (int j = 0; j < optArr.size(); j++) q.options[j] = optArr.getString(j, "");
+        currentQuiz.add(q);
+      }
+      studentAnswers = new int[currentQuiz.size()];
+      for (int i = 0; i < studentAnswers.length; i++) studentAnswers[i] = -1;
+      currentQuestionIndex = 0;
+      quizSubmitted = false;
+      currentScreen = "quiz";
+    } else if (type.equals("quiz_result")) {
+      quizScore = json.getInt("score", 0);
+      quizTotal = json.getInt("total", 0);
+      JSONArray rArr = json.getJSONArray("results");
+      quizResults = new boolean[rArr.size()];
+      for (int i = 0; i < rArr.size(); i++) quizResults[i] = rArr.getBoolean(i);
+      quizSubmitted = true;
+      currentScreen = "resultados";
+      setStatus("Nota: " + quizScore + "/" + quizTotal);
+    }
+  } catch (Exception e) {
+    println("Error parsing: " + e.getMessage());
+  }
+}
+
+void sendMessage(JSONObject msg) {
+  if (client != null && client.active()) client.write(msg.toString() + "\n");
+}
+
+void requestWorkshopList() {
+  JSONObject req = new JSONObject(); req.setString("type", "list_workshops"); sendMessage(req);
+}
+
+void requestQuiz(String title) {
+  JSONObject req = new JSONObject();
+  req.setString("type", "request_quiz"); req.setString("workshop", title); sendMessage(req);
+}
+
+void submitAnswers() {
+  JSONArray ansArr = new JSONArray();
+  for (int i = 0; i < studentAnswers.length; i++)
+    ansArr.setInt(i, studentAnswers[i] >= 0 ? studentAnswers[i] : 0);
+  JSONObject msg = new JSONObject();
+  msg.setString("type", "submit_answers");
+  msg.setString("workshop", currentWorkshopTitle);
+  msg.setJSONArray("answers", ansArr);
+  sendMessage(msg);
+}
+
+void setStatus(String msg) {
+  statusMessage = msg; statusTimer = 300; println(msg);
+}
+
+// ===== MOUSE & KEYBOARD =====
+
+void mousePressed() {
+  if (currentScreen.equals("conectar")) {
+    tfServerIP.handleMouse();
+    tfPort.handleMouse();
+    tfGrado.handleMouse();
+    tfNumero.handleMouse();
+    tfNombre.handleMouse();
+    if (btnConnect.isMouseOver()) connectToServer();
+
+  } else if (currentScreen.equals("talleres")) {
+    if (btnDisconnect.isMouseOver()) { disconnect(); return; }
+    float pad = width * 0.05;
+    float itemH = constrain(height * 0.075, 40, 60);
+    int visibleCount = floor((height - 100) / itemH);
+    for (int i = wsScrollOffset; i < workshopTitles.size() && i < wsScrollOffset + visibleCount; i++) {
+      float rowY = 70 + (i - wsScrollOffset) * itemH;
+      if (mouseX >= pad && mouseX <= width - pad && mouseY >= rowY && mouseY <= rowY + itemH - 6) {
+        requestQuiz(workshopTitles.get(i)); return;
+      }
+    }
+
+  } else if (currentScreen.equals("quiz")) {
+    if (currentQuiz.size() == 0) return;
+    QuizQuestion q = currentQuiz.get(currentQuestionIndex);
+    float qy = 75;
+    float qh = textWidth(q.text) > width * 0.75 ? 120 : 60;
+    float pad = width * 0.075;
+    float optH = constrain(height * 0.065, 34, 48);
+    float optY0 = qy + qh + 15;
+
+    for (int i = 0; i < q.options.length; i++) {
+      float optY = optY0 + i * (optH + 8);
+      if (mouseX >= pad && mouseX <= width - pad && mouseY >= optY && mouseY <= optY + optH) {
+        studentAnswers[currentQuestionIndex] = i; return;
+      }
+    }
+    if (btnPrevQuestion.isMouseOver() && currentQuestionIndex > 0) currentQuestionIndex--;
+    else if (btnNextQuestion.isMouseOver() && currentQuestionIndex < currentQuiz.size() - 1) currentQuestionIndex++;
+    else if (btnSubmitQuiz.isMouseOver() && !quizSubmitted) submitAnswers();
+
+  } else if (currentScreen.equals("resultados")) {
+    if (btnBackToWorkshops.isMouseOver()) {
+      currentScreen = "talleres"; requestWorkshopList();
+    }
+  }
+}
+
+void keyPressed() {
+  if (currentScreen.equals("conectar")) {
+    if (tfServerIP.isFocused) handleKey(tfServerIP);
+    else if (tfPort.isFocused) handleKey(tfPort);
+    else if (tfGrado.isFocused) handleKey(tfGrado);
+    else if (tfNumero.isFocused) handleKey(tfNumero);
+    else if (tfNombre.isFocused) handleKey(tfNombre);
+  }
+}
+
+void handleKey(TextField tf) {
+  if (key == BACKSPACE && tf.text.length() > 0)
+    tf.text = tf.text.substring(0, tf.text.length() - 1);
+  else if (key == ENTER || key == RETURN) {
+    tf.isFocused = false;
+    if (tf == tfNombre) connectToServer();
+  } else if (key != BACKSPACE && key != TAB && key != ENTER && key != RETURN && key != CODED) {
+    tf.text += key;
+  }
+}
+
+void mouseWheel(MouseEvent event) {
+  if (currentScreen.equals("talleres")) wsScrollOffset += (int)event.getCount();
+}
+
+// ===== DATA =====
+
+class QuizQuestion {
+  String text;
+  String[] options;
+}
