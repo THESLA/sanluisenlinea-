@@ -41,8 +41,7 @@ int statusTimer = 300;
 int wsScrollOffset = 0;
 
 void setup() {
-  surface.setResizable(true);
-  windowResize(900, 700);
+  surface.setFullScreen(true);
   surface.setTitle("Plataforma Educativa - Alumno");
 
   tfServerIP = new TextField(0, 0, 0, 0);
