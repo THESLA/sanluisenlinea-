@@ -40,8 +40,11 @@ String statusMessage = "Ingresa tus datos para conectarte";
 int statusTimer = 300;
 int wsScrollOffset = 0;
 
+void settings() {
+  fullScreen();
+}
+
 void setup() {
-  surface.setFullScreen(true);
   surface.setTitle("Plataforma Educativa - Alumno");
 
   tfServerIP = new TextField(0, 0, 0, 0);
