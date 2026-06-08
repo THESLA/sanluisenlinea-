@@ -99,25 +99,29 @@ void setup() {
 }
 
 void draw() {
-  background(235);
+  background(CREMA_FONDO);
   handleNetwork();
   drawTabs();
   drawContent();
   if (statusTimer > 0) {
-    fill(0);
-    textAlign(LEFT, TOP);
-    text(statusMessage, 10, height - 25);
+    fill(0, 0, 0, 60);
+    noStroke();
+    rect(width/2 - 130, height - 32, 260, 24, 12);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(12);
+    text(statusMessage, width/2, height - 20);
     statusTimer--;
   }
 }
 
 void drawTabs() {
-  fill(60);
   noStroke();
+  fill(AZUL_ACCENTO);
   rect(0, 0, width, 50);
   for (int i = 0; i < tabButtons.length; i++) {
     boolean isActive = currentTab.equals(tabButtons[i].label.toLowerCase().replace(" ", ""));
-    tabButtons[i].draw(180, isActive ? color(100, 180, 255) : color(80));
+    tabButtons[i].draw(isActive ? AZUL_OSCURO : color(255, 255, 255, 30), isActive ? color(20, 80, 140) : color(255, 255, 255, 60));
   }
 }
 
@@ -133,11 +137,11 @@ void drawContent() {
 
 void drawTalleresTab() {
   int x1 = 10, y1 = 130, w1 = 220;
-  fill(255);
-  stroke(200);
-  rect(x1, y1, w1, height - y1 - 30);
+  fill(BLANCO_TARJETA);
+  stroke(GRIS_BORDE);
+  rect(x1, y1, w1, height - y1 - 30, 6);
 
-  fill(50);
+  fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(13);
   text("Talleres:", x1 + 5, y1 + 3);
@@ -160,11 +164,11 @@ void drawTalleresTab() {
   int x2 = 240, y2 = 130;
   int ew = width - x2 - 10;
   int eh = height - y2 - 30;
-  fill(255);
-  stroke(200);
-  rect(x2, y2, ew, eh);
+  fill(BLANCO_TARJETA);
+  stroke(GRIS_BORDE);
+  rect(x2, y2, ew, eh, 6);
 
-  fill(50);
+  fill(AZUL_OSCURO);
   textAlign(LEFT, TOP);
   textSize(13);
   text("Editor de Taller:", x2 + 5, y2 + 3);
@@ -175,12 +179,12 @@ void drawTalleresTab() {
 
   // === CONTENIDO DE LECTURA ===
   textSize(12);
-  fill(50);
+  fill(TEXTO_OSCURO);
   text("Contenido del taller (texto de estudio):", x2 + 5, 198);
-  fill(250);
-  stroke(200);
-  rect(x2 + 5, 208, ew - 10, 55);
-  fill(30);
+  fill(255, 255, 248);
+  stroke(GRIS_BORDE);
+  rect(x2 + 5, 208, ew - 10, 55, 4);
+  fill(TEXTO_OSCURO);
   textSize(11);
 
   // Mostrar contenido con scroll si es necesario
@@ -235,15 +239,15 @@ void drawTalleresTab() {
   }
 
   // === PREGUNTAS ===
-  fill(50);
+  fill(TEXTO_OSCURO);
   textSize(12);
   text("Preguntas (" + editingQuestions.size() + "):", x2 + 5, 270);
 
   int qy = 285;
   int qh = 80;
-  fill(250);
-  stroke(210);
-  rect(x2 + 5, qy, ew - 10, qh);
+  fill(255, 255, 248);
+  stroke(GRIS_BORDE);
+  rect(x2 + 5, qy, ew - 10, qh, 4);
 
   int qVisible = qh / 28;
   int qMaxScroll = max(0, editingQuestions.size() - qVisible);
@@ -292,11 +296,11 @@ void drawTalleresTab() {
 // ===== TAB: ESTUDIANTES =====
 
 void drawEstudiantesTab() {
-  fill(255);
-  stroke(200);
-  rect(10, 55, width - 20, height - 70);
+  fill(BLANCO_TARJETA);
+  stroke(GRIS_BORDE);
+  rect(10, 55, width - 20, height - 70, 8);
 
-  fill(50);
+  fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(16);
   text("Estudiantes Conectados: " + students.size(), 20, 60);
@@ -307,7 +311,7 @@ void drawEstudiantesTab() {
 
   int xp = 20;
   for (int c = 0; c < headers.length; c++) {
-    fill(60);
+    fill(AZUL_ACCENTO);
     textSize(12);
     textAlign(LEFT, TOP);
     text(headers[c], xp, y);
@@ -319,10 +323,10 @@ void drawEstudiantesTab() {
     Student s = students.get(i);
     int rowY = y + i * 24;
     if (rowY > height - 30) break;
-    fill(i % 2 == 0 ? 245 : 255);
+    fill(i % 2 == 0 ? CREMA_FONDO : BLANCO_TARJETA);
     noStroke();
     rect(11, rowY, width - 22, 23);
-    fill(30);
+    fill(TEXTO_OSCURO);
     textSize(12);
     xp = 20;
     text((i+1), xp, rowY + 4); xp += cols[0];
@@ -338,11 +342,11 @@ void drawEstudiantesTab() {
 // ===== TAB: NOTAS =====
 
 void drawNotasTab() {
-  fill(255);
-  stroke(200);
-  rect(10, 90, width - 20, height - 105);
+  fill(BLANCO_TARJETA);
+  stroke(GRIS_BORDE);
+  rect(10, 90, width - 20, height - 105, 8);
 
-  fill(50);
+  fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(16);
   text("Notas de Alumnos", 20, 60);
@@ -354,7 +358,7 @@ void drawNotasTab() {
   int[] cols = {30, 60, 50, 140, 160, 60, 60};
   String[] headers = {"#", "Grado", "Nro", "Nombre", "Taller", "Nota", "Total"};
 
-  fill(60);
+  fill(AZUL_ACCENTO);
   textSize(12);
   textAlign(LEFT, TOP);
   int xp = 20;
@@ -370,10 +374,10 @@ void drawNotasTab() {
     if (gradeFilterWorkshop.length() > 0 && !g.workshopTitle.equals(gradeFilterWorkshop)) continue;
     int rowY = y + displayCount * 24;
     if (rowY > height - 30) break;
-    fill(displayCount % 2 == 0 ? 245 : 255);
+    fill(displayCount % 2 == 0 ? CREMA_FONDO : BLANCO_TARJETA);
     noStroke();
     rect(11, rowY, width - 22, 23);
-    fill(30);
+    fill(TEXTO_OSCURO);
     textSize(12);
     xp = 20;
     text((displayCount+1), xp, rowY + 4); xp += cols[0];
@@ -390,11 +394,11 @@ void drawNotasTab() {
 // ===== TAB: ENVIAR TALLER =====
 
 void drawEnviarTab() {
-  fill(255);
-  stroke(200);
-  rect(10, 55, width - 20, height - 70);
+  fill(BLANCO_TARJETA);
+  stroke(GRIS_BORDE);
+  rect(10, 55, width - 20, height - 70, 8);
 
-  fill(50);
+  fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(16);
   text("Enviar Taller a Alumnos", 20, 60);
@@ -428,31 +432,27 @@ void drawEnviarTab() {
       textAlign(LEFT, CENTER);
       text(students.get(i).grado + " - #" + students.get(i).numero + " - " + students.get(i).nombre, 358, sy + i * 28 + 12);
     }
-    fill(50, 130, 200);
-    stroke(40, 100, 180);
-    fill(60, 150, 230);
-    rect(620, 90, 140, 32, 4);
+    boolean hoverSend = mouseX >= 620 && mouseX <= 760 && mouseY >= 90 && mouseY <= 122;
+    noStroke();
+    fill(0, 0, 0, 15);
+    rect(621, 92, 140, 32, 16);
+    fill(hoverSend ? AZUL_OSCURO : AZUL_ACCENTO);
+    rect(620, 90, 140, 32, 16);
     fill(255);
     textAlign(CENTER, CENTER);
     textSize(13);
     text("Enviar a Alumnos", 690, 106);
-    boolean hoverSend = mouseX >= 620 && mouseX <= 760 && mouseY >= 90 && mouseY <= 122;
-    if (hoverSend) {
-      fill(60, 150, 230, 40);
-      noStroke();
-      rect(620, 90, 140, 32, 4);
-    }
   }
 }
 
 // ===== TAB: HISTORIAL =====
 
 void drawHistorialTab() {
-  fill(255);
-  stroke(200);
-  rect(10, 55, 300, height - 70);
+  fill(BLANCO_TARJETA);
+  stroke(GRIS_BORDE);
+  rect(10, 55, 300, height - 70, 8);
 
-  fill(50);
+  fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(14);
   text("Alumnos con pruebas:", 20, 60);
@@ -501,11 +501,11 @@ void drawHistorialTab() {
         gradeIndices.append(i);
     }
 
-    fill(255);
-    stroke(200);
-    rect(320, 55, width - 330, height - 70);
+    fill(BLANCO_TARJETA);
+    stroke(GRIS_BORDE);
+    rect(320, 55, width - 330, height - 70, 8);
 
-    fill(50);
+    fill(TEXTO_OSCURO);
     textAlign(LEFT, TOP);
     textSize(15);
     text("Historial de: " + sgrado + " - #" + snumero + " - " + snombre, 330, 60);
