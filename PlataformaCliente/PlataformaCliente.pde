@@ -60,8 +60,12 @@ int statusTimer = 300;
 int wsScrollOffset = 0;
 
 void settings() {
-  fullScreen();
+  fullScreen(P2D); // P2D necesario para cargar SVG con loadShape()
 }
+
+// ===== SVG ICONS =====
+PShape iconBook, iconGraduation, iconCheck, iconCross, iconUsers, iconStar, iconClock;
+PShape iconEdit, iconPlus, iconTrash, iconHelpCircle, iconArrowLeft, iconCheckCircle, iconXCircle;
 
 void setup() {
   surface.setTitle("Plataforma Educativa - Alumno");
@@ -69,6 +73,22 @@ void setup() {
   // Cargar tipografías
   fontUbuntu = createFont("Ubuntu-Regular.ttf", 14, true); // Cargar desde data/
   fontGaramond = createFont("Garamond", 24, true);// Serif para lectura de talleres
+
+  // Cargar iconos SVG estilo Simple Icons
+  iconBook        = loadShape("icons/book.svg");
+  iconGraduation  = loadShape("icons/graduation.svg");
+  iconCheck       = loadShape("icons/check.svg");
+  iconCross       = loadShape("icons/cross.svg");
+  iconUsers       = loadShape("icons/users.svg");
+  iconStar        = loadShape("icons/star.svg");
+  iconClock       = loadShape("icons/clock.svg");
+  iconEdit        = loadShape("icons/edit.svg");
+  iconPlus        = loadShape("icons/plus.svg");
+  iconTrash       = loadShape("icons/trash.svg");
+  iconHelpCircle  = loadShape("icons/help-circle.svg");
+  iconArrowLeft   = loadShape("icons/arrow-left.svg");
+  iconCheckCircle = loadShape("icons/check-circle.svg");
+  iconXCircle     = loadShape("icons/x-circle.svg");
 
   tfServerIP = new TextField(0, 0, 0, 0);
   tfServerIP.text = serverIP;
@@ -193,9 +213,13 @@ void drawLoginScreen() {
   float tarjetaX = cx - tarjetaW / 2;
   float tarjetaY = height * 0.15;
 
-  // Icono decorativo line-art (libro/graduación)
-  float iconY = tarjetaY - 40;
-  drawBookIcon(cx, iconY, 36);
+  // Icono SVG de graduación (estilo Simple Icons)
+  float iconSize = 44;
+  float iconY = tarjetaY - 36;
+  shapeMode(CENTER);
+  noStroke();
+  fill(255);
+  shape(iconGraduation, cx, iconY, iconSize, iconSize);
 
   // Tarjeta blanca con bordes redondeados
   noStroke();
@@ -275,30 +299,7 @@ void drawLoginScreen() {
   btnConnect.draw(AZUL_ACCENTO, AZUL_OSCURO);
 }
 
-// Dibuja icono de libro en estilo line-art
-void drawBookIcon(float cx, float y, float size) {
-  noFill();
-  stroke(255);
-  strokeWeight(2.5);
-  float s = size;
-
-  // Libro abierto
-  arc(cx - s * 0.35, y + s * 0.1, s * 0.5, s * 0.7, PI * 0.15, PI * 0.85);
-  arc(cx + s * 0.35, y + s * 0.1, s * 0.5, s * 0.7, PI * 1.15, PI * 1.85);
-
-  // Páginas (líneas horizontales)
-  for (int i = 0; i < 3; i++) {
-    float ly = y + s * 0.1 + (i + 1) * s * 0.15;
-    line(cx - s * 0.2, ly, cx + s * 0.2, ly);
-  }
-
-  // Estrella/brillo decorativo
-  strokeWeight(1.5);
-  float starX = cx + s * 0.5;
-  float starY = y - s * 0.2;
-  line(starX - 4, starY, starX + 4, starY);
-  line(starX, starY - 4, starX, starY + 4);
-}
+// drawBookIcon eliminado — reemplazado por iconos SVG (iconBook, iconGraduation, etc.)
 
 // ===== WORKSHOPS SCREEN =====
 
@@ -394,14 +395,13 @@ void drawWorkshopsScreen() {
     strokeWeight(hovered ? 2 : 1);
     rect(pad, cardY, width - pad * 2, itemH, 14);
 
-    // Icono de libro pequeño (decoración)
+    // Icono SVG de libro (decoración)
+    shapeMode(CENTER);
     noStroke();
     fill(AZUL_CLARO);
     ellipse(pad + 26, cardY + itemH/2, 28, 28);
     fill(AZUL_ACCENTO);
-    textAlign(CENTER, CENTER);
-    textSize(14);
-    text("📖", pad + 26, cardY + itemH/2);
+    shape(iconBook, pad + 26, cardY + itemH/2, 16, 16);
 
     // Título del taller
     fill(TEXTO_OSCURO);
@@ -414,12 +414,15 @@ void drawWorkshopsScreen() {
     fill(TEXTO_SUAVE);
     text("Toca para iniciar →", pad + 48, cardY + itemH * 0.78);
 
-    // Flecha indicadora
+    // Flecha indicadora SVG
     if (hovered) {
+      shapeMode(CENTER);
       fill(AZUL_ACCENTO);
-      textAlign(RIGHT, CENTER);
-      textSize(18);
-      text("→", width - pad - 16, cardY + itemH/2);
+      pushMatrix();
+      translate(width - pad - 20, cardY + itemH/2);
+      scale(-1, 1);  // Invertir horizontalmente para que apunte a la derecha
+      shape(iconArrowLeft, 0, 0, 18, 18);
+      popMatrix();
     }
   }
 
@@ -446,14 +449,17 @@ void drawLecturaScreen() {
   textFont(fontGaramond, titleSize);
   text(currentWorkshopTitle, 20, 28);
 
-  // Botón "Volver" estilo píldora
+  // Botón "Volver" estilo píldora con icono SVG
   float backW = 90;
   float backH = 30;
   noStroke();
   fill(255, 255, 255, 200);
   rect(width - backW - 14, 13, backW, backH, backH/2);
-  fill(AZUL_ACCENTO); textAlign(CENTER, CENTER); textSize(13);
-  text("← Volver", width - backW - 14 + backW/2, 13 + backH/2);
+  shapeMode(CENTER);
+  fill(AZUL_ACCENTO);
+  shape(iconArrowLeft, width - backW - 14 + 18, 13 + backH/2, 16, 16);
+  fill(AZUL_ACCENTO); textAlign(LEFT, CENTER); textSize(13);
+  text("Volver", width - backW - 14 + 28, 13 + backH/2);
   textAlign(RIGHT, CENTER);
   fill(255, 200);
   textSize(titleSize * 0.7);
@@ -639,10 +645,15 @@ void drawLecturaScreen() {
     rect(btnStartQuiz.x + 2, bby + 2, btnStartQuiz.w, btnStartQuiz.h, btnStartQuiz.h/2);
     fill(TEXTO_SUAVE);
     rect(btnStartQuiz.x, bby, btnStartQuiz.w, btnStartQuiz.h, btnStartQuiz.h/2);
+
+    // Icono SVG de libro + texto
+    shapeMode(CENTER);
     fill(BLANCO_TARJETA);
-    textAlign(CENTER, CENTER);
+    shape(iconBook, btnStartQuiz.x + 18, bby + btnStartQuiz.h/2, 16, 16);
+    fill(BLANCO_TARJETA);
+    textAlign(LEFT, CENTER);
     textSize(constrain(width * 0.016, 12, 14));
-    text("📖 Solo lectura", btnStartQuiz.x + btnStartQuiz.w/2, bby + btnStartQuiz.h/2);
+    text("Solo lectura", btnStartQuiz.x + 30, bby + btnStartQuiz.h/2);
 
     // Etiqueta informativa
     fill(TEXTO_SUAVE);
@@ -866,12 +877,15 @@ void drawResultsScreen() {
     strokeWeight(1);
     rect(width * 0.05, rowY, width * 0.9, rh, rh/2);
 
-    // Icono y texto
+    // Icono SVG (check o cross) + texto
+    shapeMode(CENTER);
+    noStroke();
     fill(correct ? VERDE_ACIERTO : ROJO_ERROR);
+    shape(correct ? iconCheckCircle : iconXCircle, width * 0.07, rowY + rh/2, 16, 16);
+    fill(TEXTO_OSCURO);
     textAlign(LEFT, CENTER);
     textSize(constrain(width * 0.016, 11, 14));
-    String icon = correct ? "✓" : "✗";
-    text(icon + "  P" + (i+1) + ": " + currentQuiz.get(i).text, width * 0.08, rowY + rh/2, width * 0.84, rh);
+    text(" P" + (i+1) + ": " + currentQuiz.get(i).text, width * 0.09, rowY + rh/2, width * 0.83, rh);
   }
 
   // Botón volver a talleres

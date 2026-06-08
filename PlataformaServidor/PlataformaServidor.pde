@@ -60,15 +60,35 @@ TextField tfQuestionText;
 String gradeFilterWorkshop = "";
 int selectedWorkshopIndex = -1;
 
+// ===== SVG ICONS =====
+PShape iconBook, iconGraduation, iconCheck, iconCross, iconUsers, iconStar, iconClock;
+PShape iconEdit, iconPlus, iconTrash, iconHelpCircle, iconArrowLeft, iconCheckCircle, iconXCircle;
+
 void setup() {
-  size(960, 650);
+  size(960, 650, P2D); // P2D necesario para cargar SVG con loadShape()
   surface.setTitle("Plataforma Educativa - Servidor");
 
+  // Cargar iconos SVG estilo Simple Icons
+  iconBook        = loadShape("icons/book.svg");
+  iconGraduation  = loadShape("icons/graduation.svg");
+  iconCheck       = loadShape("icons/check.svg");
+  iconCross       = loadShape("icons/cross.svg");
+  iconUsers       = loadShape("icons/users.svg");
+  iconStar        = loadShape("icons/star.svg");
+  iconClock       = loadShape("icons/clock.svg");
+  iconEdit        = loadShape("icons/edit.svg");
+  iconPlus        = loadShape("icons/plus.svg");
+  iconTrash       = loadShape("icons/trash.svg");
+  iconHelpCircle  = loadShape("icons/help-circle.svg");
+  iconArrowLeft   = loadShape("icons/arrow-left.svg");
+  iconCheckCircle = loadShape("icons/check-circle.svg");
+  iconXCircle     = loadShape("icons/x-circle.svg");
+
   tabButtons = new Button[4];
-  tabButtons[0] = new Button(10, 10, 110, 32, "Talleres");
-  tabButtons[1] = new Button(130, 10, 120, 32, "Estudiantes");
-  tabButtons[2] = new Button(260, 10, 100, 32, "Notas");
-  tabButtons[3] = new Button(370, 10, 120, 32, "Historial");
+  tabButtons[0] = new Button(10, 10, 110, 32, "");
+  tabButtons[1] = new Button(130, 10, 120, 32, "");
+  tabButtons[2] = new Button(260, 10, 100, 32, "");
+  tabButtons[3] = new Button(370, 10, 120, 32, "");
 
   int yb = 55;
   btnNewWorkshop = new Button(10, yb, 130, 26, "+ Nuevo Taller");
@@ -126,9 +146,26 @@ void drawTabs() {
   noStroke();
   fill(AZUL_ACCENTO);
   rect(0, 0, width, 50);
+
+  // Iconos SVG para cada tab
+  PShape[] tabIcons = { iconBook, iconUsers, iconStar, iconClock };
+  String[] tabLabels = { "Talleres", "Estudiantes", "Notas", "Historial" };
+
   for (int i = 0; i < tabButtons.length; i++) {
-    boolean isActive = currentTab.equals(tabButtons[i].label.toLowerCase().replace(" ", ""));
+    boolean isActive = currentTab.equals(tabLabels[i].toLowerCase());
     tabButtons[i].draw(isActive ? AZUL_OSCURO : color(255, 255, 255, 30), isActive ? color(20, 80, 140) : color(255, 255, 255, 60));
+
+    // Icono SVG antes del texto
+    shapeMode(CENTER);
+    fill(255);
+    noStroke();
+    shape(tabIcons[i], tabButtons[i].x + 16, tabButtons[i].y + tabButtons[i].h/2, 16, 16);
+
+    // Texto del tab (desplazado para dejar espacio al icono)
+    fill(255);
+    textAlign(LEFT, CENTER);
+    textSize(13);
+    text(tabLabels[i], tabButtons[i].x + 28, tabButtons[i].y + tabButtons[i].h/2);
   }
 }
 
@@ -147,10 +184,14 @@ void drawTalleresTab() {
   stroke(GRIS_BORDE);
   rect(x1, y1, w1, height - y1 - 30, 6);
 
+  // Icono SVG de libro junto al título
+  shapeMode(CENTER);
+  fill(AZUL_ACCENTO);
+  shape(iconBook, x1 + 18, y1 + 10, 16, 16);
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(13);
-  text("Talleres:", x1 + 5, y1 + 3);
+  text("Talleres:", x1 + 30, y1 + 4);
 
   int ly = y1 + 22;
   int visibleCount = (height - y1 - 50) / 28;
@@ -174,10 +215,13 @@ void drawTalleresTab() {
   stroke(GRIS_BORDE);
   rect(x2, y2, ew, eh, 6);
 
+  shapeMode(CENTER);
+  fill(AZUL_OSCURO);
+  shape(iconEdit, x2 + 14, y2 + 9, 14, 14);
   fill(AZUL_OSCURO);
   textAlign(LEFT, TOP);
   textSize(13);
-  text("Editor de Taller:", x2 + 5, y2 + 3);
+  text("Editor de Taller:", x2 + 30, y2 + 4);
 
   textSize(12);
   text("Título:", x2 + 5, y2 + 25);
@@ -245,9 +289,12 @@ void drawTalleresTab() {
   }
 
   // === PREGUNTAS ===
+  shapeMode(CENTER);
+  fill(AZUL_ACCENTO);
+  shape(iconHelpCircle, x2 + 14, 278, 14, 14);
   fill(TEXTO_OSCURO);
   textSize(12);
-  text("Preguntas (" + editingQuestions.size() + "):", x2 + 5, 270);
+  text("Preguntas (" + editingQuestions.size() + "):", x2 + 30, 273);
 
   int qy = 285;
   int qh = 80;
@@ -312,14 +359,22 @@ void drawEstudiantesTab() {
     if (s.connected && s.client != null && s.client.active()) connectedCount++;
   }
 
+  // Icono SVG de usuarios
+  shapeMode(CENTER);
+  fill(AZUL_ACCENTO);
+  shape(iconUsers, 30, 68, 18, 18);
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(16);
-  text("Estudiantes", 20, 60);
+  text("Estudiantes", 48, 63);
 
+  // Indicador de conexión con SVG check
+  shapeMode(CENTER);
+  fill(#27AE60);
+  shape(iconCheckCircle, 24, 86, 14, 14);
   fill(AZUL_ACCENTO);
   textSize(13);
-  text("🟢 " + connectedCount + " conectados", 20, 80);
+  text(connectedCount + " conectados", 38, 80);
   fill(120);
   text("(" + students.size() + " en total)", 150, 80);
 
@@ -386,10 +441,14 @@ void drawNotasTab() {
   stroke(GRIS_BORDE);
   rect(10, 90, width - 20, height - 105, 8);
 
+  // Icono SVG de estrella
+  shapeMode(CENTER);
+  fill(AZUL_ACCENTO);
+  shape(iconStar, 30, 68, 18, 18);
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(16);
-  text("Notas de Alumnos", 20, 60);
+  text("Notas de Alumnos", 48, 63);
 
   btnGradeFilterAll.draw();
   btnGradeFilterWorkshop.draw();
@@ -440,10 +499,14 @@ void drawHistorialTab() {
   stroke(GRIS_BORDE);
   rect(10, 55, 300, height - 70, 8);
 
+  // Icono SVG de reloj
+  shapeMode(CENTER);
+  fill(AZUL_ACCENTO);
+  shape(iconClock, 30, 66, 16, 16);
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(14);
-  text("Alumnos con pruebas:", 20, 60);
+  text("Alumnos con pruebas:", 48, 60);
 
   rebuildHistStudentList();
 
@@ -555,13 +618,16 @@ void drawHistorialTab() {
           fill(correct ? color(220, 255, 220) : color(255, 220, 220));
           noStroke();
           rect(332, rowY2, width - 354, 22);
+          shapeMode(CENTER);
+          noStroke();
+          fill(correct ? VERDE_ACIERTO : ROJO_ERROR);
+          shape(correct ? iconCheckCircle : iconXCircle, 348, rowY2 + 11, 14, 14);
           fill(correct ? color(30, 120, 30) : color(180, 30, 30));
           textSize(11);
           textAlign(LEFT, CENTER);
-          String icon = correct ? "\u2713" : "\u2717";
           String ansText = gd.answers[qi] >= 0 && gd.answers[qi] < ws.questions.get(qi).options.length
             ? ws.questions.get(qi).options[gd.answers[qi]] : "N/A";
-          text(icon + " P" + (qi+1) + ": " + ws.questions.get(qi).text + "  (" + ansText + ")", 340, rowY2 + 11);
+          text(" P" + (qi+1) + ": " + ws.questions.get(qi).text + "  (" + ansText + ")", 360, rowY2 + 11);
         }
       }
     }
