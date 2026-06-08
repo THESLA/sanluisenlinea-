@@ -33,6 +33,8 @@ int quizScore = 0, quizTotal = 0;
 boolean[] quizResults;
 int readingScrollOffset = 0;  // Scroll vertical en pantalla de lectura
 int scrollBtnUpX, scrollBtnUpY_, scrollBtnDownX, scrollBtnDownY_, scrollBtnSize_;
+int scrollTrackX, scrollTrackY, scrollTrackH, scrollTrackW;
+boolean scrollDragging = false;
 
 // Reconnection
 boolean wasConnected = false;
@@ -506,16 +508,36 @@ void drawLecturaScreen() {
     }
   }
 
-  // Botones de scroll Subir/Bajar (para PC sin rueda de mouse)
+  // Scrollbar: track + thumb + botones Subir/Bajar (para PC sin rueda)
   float scrollBtnSize = 32;
   float scrollBtnX = padX + contentW - scrollBtnSize - 4;
   float scrollBtnUpY = padY + 4;
   float scrollBtnDownY = padY + contentH - scrollBtnSize - 4;
+  float trackY = padY + scrollBtnSize + 4;
+  float trackH = contentH - scrollBtnSize * 2 - 8;
 
-  // Track de scroll (barra vertical sutil)
+  // Track de scroll (barra vertical)
   noStroke();
-  fill(0, 0, 0, 20);
-  rect(scrollBtnX, padY, scrollBtnSize, contentH, scrollBtnSize/2);
+  fill(0, 0, 0, 12);
+  rect(scrollBtnX, trackY, scrollBtnSize, trackH, scrollBtnSize/2);
+
+  // Thumb (barra deslizante) — tamaño proporcional al contenido visible
+  float thumbRatio = constrain(contentH / max(totalContentH, 1), 0.05, 1.0);
+  float thumbH = max(20, trackH * thumbRatio);
+  float thumbRange = trackH - thumbH;
+  float thumbY = trackY + (maxScroll > 0 ? (float)readingScrollOffset / maxScroll * thumbRange : 0);
+
+  // Color del thumb según hover o dragging
+  boolean hoverThumb = mouseX >= scrollBtnX && mouseX <= scrollBtnX + scrollBtnSize && mouseY >= thumbY && mouseY <= thumbY + thumbH;
+  if (scrollDragging) {
+    fill(AZUL_OSCURO, 200);
+    // Mientras se arrastra, actualizar scroll según el mouse
+    float dragY = constrain(mouseY - trackY, 0, trackH - thumbH);
+    readingScrollOffset = (int)(maxScroll * dragY / max(thumbRange, 1));
+  } else {
+    fill(hoverThumb ? AZUL_ACCENTO : color(150, 150, 150, 160));
+  }
+  rect(scrollBtnX, thumbY, scrollBtnSize, thumbH, scrollBtnSize/2);
 
   // Botón Subir
   boolean hoverUp = mouseX >= scrollBtnX && mouseX <= scrollBtnX + scrollBtnSize && mouseY >= scrollBtnUpY && mouseY <= scrollBtnUpY + scrollBtnSize;
@@ -532,9 +554,10 @@ void drawLecturaScreen() {
   fill(readingScrollOffset < maxScroll ? 255 : 180);
   text("▼", scrollBtnX + scrollBtnSize/2, scrollBtnDownY + scrollBtnSize/2);
 
-  // Guardar posición de botones para el mousePressed
+  // Guardar posición de botones y track para el mousePressed
   scrollBtnUpX = (int)scrollBtnX; scrollBtnUpY_ = (int)scrollBtnUpY; scrollBtnDownX = (int)scrollBtnX; scrollBtnDownY_ = (int)scrollBtnDownY;
   scrollBtnSize_ = (int)scrollBtnSize;
+  scrollTrackX = (int)scrollBtnX; scrollTrackY = (int)trackY; scrollTrackH = (int)trackH; scrollTrackW = (int)scrollBtnSize;
 
   // Botón al fondo - "Comenzar Evaluación" solo si hay preguntas
   float bby = height - 55;
@@ -1129,10 +1152,15 @@ void mousePressed() {
     if (btnDisconnect.isMouseOver()) { disconnect(); return; }
     // Botones de scroll Subir/Bajar
     if (mouseX >= scrollBtnUpX && mouseX <= scrollBtnUpX + scrollBtnSize_ && mouseY >= scrollBtnUpY_ && mouseY <= scrollBtnUpY_ + scrollBtnSize_) {
-      readingScrollOffset = max(0, readingScrollOffset - 5); return;
+      readingScrollOffset = max(0, readingScrollOffset - 3); return;
     }
     if (mouseX >= scrollBtnDownX && mouseX <= scrollBtnDownX + scrollBtnSize_ && mouseY >= scrollBtnDownY_ && mouseY <= scrollBtnDownY_ + scrollBtnSize_) {
-      readingScrollOffset += 5; return;
+      readingScrollOffset += 3; return;
+    }
+    // Click en el track de scroll para iniciar arrastre del thumb
+    if (mouseX >= scrollTrackX && mouseX <= scrollTrackX + scrollTrackW && mouseY >= scrollTrackY && mouseY <= scrollTrackY + scrollTrackH) {
+      scrollDragging = true;
+      return;
     }
     if (btnStartQuiz.isMouseOver()) {
       // Ir al quiz SOLO si hay preguntas cargadas
@@ -1194,6 +1222,16 @@ void handleKey(TextField tf) {
 void mouseWheel(MouseEvent event) {
   if (currentScreen.equals("talleres")) wsScrollOffset += (int)event.getCount();
   else if (currentScreen.equals("lectura")) readingScrollOffset += (int)event.getCount();
+}
+
+void mouseDragged() {
+  // Si estamos arrastrando el thumb del scroll en lectura, no necesitamos hacer nada
+  // porque el draw() ya actualiza la posición mientras scrollDragging = true
+  // Solo mantenemos el flag activo
+}
+
+void mouseReleased() {
+  scrollDragging = false;
 }
 
 // ===== DATA =====
