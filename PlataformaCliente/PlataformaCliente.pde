@@ -49,7 +49,7 @@ String savedGrado = "", savedNumero = "", savedNombre = "";
 final String BUFFER_FILE = "data/respuestas_pendientes.json";
 
 // Fonts
-PFont fontUbuntu;      // Fuente principal de la interfaz
+PFont fontUI;          // Fuente principal de la interfaz (Arial/Ubuntu)
 PFont fontGaramond;    // Fuente serif para lectura de talleres
 
 // UI Controls
@@ -67,8 +67,9 @@ void setup() {
   surface.setTitle("Plataforma Educativa - Alumno");
 
   // Cargar tipografías
-  fontUbuntu = createFont("Ubuntu", 14, true);     // Fuente principal de la interfaz
-  fontGaramond = createFont("Garamond", 24, true); // Fuente serif para lectura de talleres
+  // Fuente principal sans-serif (interfaz)
+  fontUI = createFont("Arial", 14, true);        // Fuente sans-serif principal
+  fontGaramond = createFont("Garamond", 24, true);// Serif para leer talleres
 
   tfServerIP = new TextField(0, 0, 0, 0);
   tfServerIP.text = serverIP;
@@ -89,7 +90,7 @@ void setup() {
 
 void draw() {
   // Fuente por defecto: Ubuntu para toda la interfaz
-  textFont(fontUbuntu);
+  textFont(fontUI);
 
   layout();
 
