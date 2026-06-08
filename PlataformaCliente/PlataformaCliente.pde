@@ -418,6 +418,19 @@ void drawLecturaScreen() {
   float contentW = width - padX * 2;
   float contentH = height - padY - 82;
 
+  // Scrollbar: track + thumb + botones Subir/Bajar
+  float scrollBtnSize = 32;
+  float scrollBtnX = padX + contentW - scrollBtnSize - 4;
+  float scrollBtnUpY = padY + 6;
+  float scrollBtnDownY = padY + contentH - scrollBtnSize - 6;
+  float trackY = padY + scrollBtnSize + 8;
+  float trackH = contentH - scrollBtnSize * 2 - 16;
+
+  // Ancho del texto: dejar espacio a la izquierda (padding) y a la derecha (scrollbar)
+  float textLeft = padX + 16;
+  float textRight = scrollBtnX - 12;
+  float contentInnerW = max(100, textRight - textLeft);
+
   // Fondo blanco para el contenido con borde sutil
   noStroke();
   fill(0, 0, 0, 10);
@@ -448,7 +461,6 @@ void drawLecturaScreen() {
   // Renderizar contenido con word-wrap y scroll
   String[] paragraphs = split(displayContent, '\n');
   float lineH = readingSize * 1.6;
-  float contentInnerW = contentW - 20;
 
   // Calcular altura total del contenido
   float totalContentH = 0;
@@ -468,7 +480,7 @@ void drawLecturaScreen() {
   readingScrollOffset = constrain(readingScrollOffset, 0, maxScroll);
 
   // Dibujar contenido visible con scroll
-  float drawY = padY + 10;
+  float drawY = padY + 14;
   int lineCount = 0;
   int skipLines = readingScrollOffset;
   boolean started = false;
@@ -477,7 +489,7 @@ void drawLecturaScreen() {
     if (para.trim().length() == 0) {
       if (started) {
         lineCount++;
-        if (lineCount > skipLines && drawY + lineH <= padY + contentH) {
+        if (lineCount > skipLines && drawY + lineH <= padY + contentH - 6) {
           drawY += lineH * 0.5;
         }
       }
@@ -491,8 +503,8 @@ void drawLecturaScreen() {
       String testLine = currentLine.length() == 0 ? w : currentLine + " " + w;
       if (textWidth(testLine) > contentInnerW && currentLine.length() > 0) {
         lineCount++;
-        if (lineCount > skipLines && drawY + lineH <= padY + contentH - 10) {
-          text(currentLine, padX + 10, drawY, contentInnerW, lineH);
+        if (lineCount > skipLines && drawY + lineH <= padY + contentH - 6) {
+          text(currentLine, textLeft, drawY, contentInnerW, lineH);
           drawY += lineH;
         }
         currentLine = w;
@@ -502,8 +514,8 @@ void drawLecturaScreen() {
     }
     if (currentLine.length() > 0) {
       lineCount++;
-      if (lineCount > skipLines && drawY + lineH <= padY + contentH - 10) {
-        text(currentLine, padX + 10, drawY, contentInnerW, lineH);
+      if (lineCount > skipLines && drawY + lineH <= padY + contentH - 6) {
+        text(currentLine, textLeft, drawY, contentInnerW, lineH);
         drawY += lineH;
       }
     }
@@ -513,15 +525,7 @@ void drawLecturaScreen() {
     }
   }
 
-  // Scrollbar: track + thumb + botones Subir/Bajar (para PC sin rueda)
-  float scrollBtnSize = 32;
-  float scrollBtnX = padX + contentW - scrollBtnSize - 4;
-  float scrollBtnUpY = padY + 4;
-  float scrollBtnDownY = padY + contentH - scrollBtnSize - 4;
-  float trackY = padY + scrollBtnSize + 4;
-  float trackH = contentH - scrollBtnSize * 2 - 8;
-
-  // Track de scroll (barra vertical)
+  // Track de scroll (barra vertical) — variables ya definidas arriba
   noStroke();
   fill(0, 0, 0, 12);
   rect(scrollBtnX, trackY, scrollBtnSize, trackH, scrollBtnSize/2);
