@@ -45,6 +45,9 @@ String savedGrado = "", savedNumero = "", savedNombre = "";
 // Local persistence buffer (guardar respuestas si no hay conexión)
 final String BUFFER_FILE = "data/respuestas_pendientes.json";
 
+// Fonts
+PFont fontGaramond;
+
 // UI Controls
 Button btnConnect, btnDisconnect, btnPrevQuestion, btnNextQuestion, btnSubmitQuiz, btnBackToWorkshops, btnStartQuiz;
 TextField tfServerIP, tfPort, tfGrado, tfNumero, tfNombre;
@@ -58,6 +61,9 @@ void settings() {
 
 void setup() {
   surface.setTitle("Plataforma Educativa - Alumno");
+
+  // Cargar tipografía Garamond para los talleres (lectura)
+  fontGaramond = createFont("Garamond", 24, true);
 
   tfServerIP = new TextField(0, 0, 0, 0);
   tfServerIP.text = serverIP;
@@ -381,7 +387,8 @@ void drawLecturaScreen() {
   noStroke();
   fill(AZUL_ACCENTO); rect(0, 0, width, 56);
   float titleSize = constrain(width * 0.022, 15, 20);
-  fill(255); textAlign(LEFT, CENTER); textSize(titleSize);
+  fill(255); textAlign(LEFT, CENTER);
+  textFont(fontGaramond, titleSize);
   text(currentWorkshopTitle, 20, 28);
 
   // Botón "Volver" estilo píldora
@@ -412,9 +419,9 @@ void drawLecturaScreen() {
   strokeWeight(1);
   rect(padX, padY, contentW, contentH, 14);
 
-  // Tipografía grande para lectura
+  // Tipografía Garamond para lectura (elegante y legible)
   float readingSize = constrain(width * 0.022, 17, 30);
-  textSize(readingSize);
+  textFont(fontGaramond, readingSize);
   textAlign(LEFT, TOP);
   fill(TEXTO_OSCURO);
 
