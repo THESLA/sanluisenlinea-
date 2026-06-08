@@ -49,7 +49,8 @@ String savedGrado = "", savedNumero = "", savedNombre = "";
 final String BUFFER_FILE = "data/respuestas_pendientes.json";
 
 // Fonts
-PFont fontGaramond;
+PFont fontUbuntu;      // Fuente principal de la interfaz
+PFont fontGaramond;    // Fuente serif para lectura de talleres
 
 // UI Controls
 Button btnConnect, btnDisconnect, btnPrevQuestion, btnNextQuestion, btnSubmitQuiz, btnBackToWorkshops, btnStartQuiz;
@@ -65,8 +66,9 @@ void settings() {
 void setup() {
   surface.setTitle("Plataforma Educativa - Alumno");
 
-  // Cargar tipografía Garamond para los talleres (lectura)
-  fontGaramond = createFont("Garamond", 24, true);
+  // Cargar tipografías
+  fontUbuntu = createFont("Ubuntu", 14, true);     // Fuente principal de la interfaz
+  fontGaramond = createFont("Garamond", 24, true); // Fuente serif para lectura de talleres
 
   tfServerIP = new TextField(0, 0, 0, 0);
   tfServerIP.text = serverIP;
@@ -86,6 +88,9 @@ void setup() {
 }
 
 void draw() {
+  // Fuente por defecto: Ubuntu para toda la interfaz
+  textFont(fontUbuntu);
+
   layout();
 
   // Fondo según pantalla
