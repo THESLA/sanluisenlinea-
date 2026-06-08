@@ -178,8 +178,8 @@ void drawLoginScreen() {
   // Espacio de top-a-top entre cajitas: cajita(30) + gap(12) + label(13) + gap(3) = 58
   float campoTopGap = 58;
 
-  // Altura de la tarjeta (mucho más compacta)
-  float tarjetaH = 62 + 14 + 44 + campoH + 18 + 50 + campoH * 3 + campoTopGap * 2 + 36 + 26;
+  // Altura de la tarjeta calculada según el layout interno
+  float tarjetaH = 60 + 14 + 32 + campoH + 26 + 32 + campoTopGap * 2 + campoH + 20 + 40 + 22;
 
   // Icono de graduación (más pequeño y pegado a la tarjeta)
   noStroke();
@@ -210,7 +210,7 @@ void drawLoginScreen() {
   line(tarjetaX + 40, divY, tarjetaX + tarjetaW - 40, divY);
 
   // ===== SERVIDOR =====
-  float secY = divY + 12;
+  float secY = divY + 14;
   fill(AZUL_ACCENTO);
   textAlign(LEFT, TOP);
   textSize(labelSize);
@@ -219,7 +219,7 @@ void drawLoginScreen() {
   float ipW = campoW * 0.55;
   float portW = campoW * 0.35;
   float portX = lx + ipW + 16;
-  float serverY = secY + 18;
+  float serverY = secY + 32;  // +32 separación amplia para que "Dirección IP" no toque "Servidor"
 
   fill(TEXTO_SUAVE);
   textSize(labelSize - 1);
@@ -235,13 +235,13 @@ void drawLoginScreen() {
   tfPort.draw();
 
   // ===== DATOS DEL ALUMNO =====
-  float alumnoY = serverY + campoH + 16;
+  float alumnoY = serverY + campoH + 26;  // +26 para separar bien "Datos del Alumno" de los campos del servidor
   fill(AZUL_ACCENTO);
   textSize(labelSize);
   textAlign(LEFT, TOP);
   text("Datos del Alumno", lx, alumnoY);
 
-  float row1Y = alumnoY + 18;
+  float row1Y = alumnoY + 32;  // +32 separación amplia entre "Datos del Alumno" y "Grado / Sección"
 
   // Fila 1: Grado
   fill(TEXTO_SUAVE);
