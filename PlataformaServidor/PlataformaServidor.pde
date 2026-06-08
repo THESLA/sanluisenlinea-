@@ -64,12 +64,11 @@ void setup() {
   size(960, 650);
   surface.setTitle("Plataforma Educativa - Servidor");
 
-  tabButtons = new Button[5];
+  tabButtons = new Button[4];
   tabButtons[0] = new Button(10, 10, 110, 32, "Talleres");
   tabButtons[1] = new Button(130, 10, 120, 32, "Estudiantes");
   tabButtons[2] = new Button(260, 10, 100, 32, "Notas");
-  tabButtons[3] = new Button(370, 10, 120, 32, "Enviar Taller");
-  tabButtons[4] = new Button(500, 10, 120, 32, "Historial");
+  tabButtons[3] = new Button(370, 10, 120, 32, "Historial");
 
   int yb = 55;
   btnNewWorkshop = new Button(10, yb, 130, 26, "+ Nuevo Taller");
@@ -137,7 +136,6 @@ void drawContent() {
   if (currentTab.equals("talleres")) drawTalleresTab();
   else if (currentTab.equals("estudiantes")) drawEstudiantesTab();
   else if (currentTab.equals("notas")) drawNotasTab();
-  else if (currentTab.equals("enviartaller")) drawEnviarTab();
   else if (currentTab.equals("historial")) drawHistorialTab();
 }
 
@@ -434,58 +432,6 @@ void drawNotasTab() {
 }
 
 // ===== TAB: ENVIAR TALLER =====
-
-void drawEnviarTab() {
-  fill(BLANCO_TARJETA);
-  stroke(GRIS_BORDE);
-  rect(10, 55, width - 20, height - 70, 8);
-
-  fill(TEXTO_OSCURO);
-  textAlign(LEFT, TOP);
-  textSize(16);
-  text("Enviar Taller a Alumnos", 20, 60);
-
-  textSize(13);
-  text("Selecciona un taller de la lista y presiona Enviar:", 20, 90);
-
-  int y = 120;
-  for (int i = 0; i < workshops.size(); i++) {
-    int rowY = y + i * 32;
-    if (rowY > height - 60) break;
-    fill(i == selectedWorkshopIndex ? color(200, 230, 255) : 245);
-    stroke(200);
-    rect(20, rowY, 300, 28);
-    fill(30);
-    textAlign(LEFT, CENTER);
-    text(workshops.get(i).title + " (" + workshops.get(i).questions.size() + " preg.)", 28, rowY + 14);
-  }
-
-  if (selectedWorkshopIndex >= 0 && selectedWorkshopIndex < workshops.size()) {
-    fill(50);
-    textAlign(LEFT, TOP);
-    text("Alumnos que recibirán el taller:", 350, 90);
-    int sy = 120;
-    for (int i = 0; i < students.size(); i++) {
-      if (!students.get(i).connected) continue;
-      fill(245);
-      stroke(200);
-      rect(350, sy + i * 28, 240, 24);
-      fill(30);
-      textAlign(LEFT, CENTER);
-      text(students.get(i).grado + " - #" + students.get(i).numero + " - " + students.get(i).nombre, 358, sy + i * 28 + 12);
-    }
-    boolean hoverSend = mouseX >= 620 && mouseX <= 760 && mouseY >= 90 && mouseY <= 122;
-    noStroke();
-    fill(0, 0, 0, 15);
-    rect(621, 92, 140, 32, 16);
-    fill(hoverSend ? AZUL_OSCURO : AZUL_ACCENTO);
-    rect(620, 90, 140, 32, 16);
-    fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(13);
-    text("Enviar a Alumnos", 690, 106);
-  }
-}
 
 // ===== TAB: HISTORIAL =====
 
@@ -804,40 +750,6 @@ void processMessage(Client c, String msg) {
   }
 }
 
-void sendWorkshopToAll(int workshopIndex) {
-  if (workshopIndex < 0 || workshopIndex >= workshops.size()) return;
-  Workshop ws = workshops.get(workshopIndex);
-
-  JSONArray qArr = new JSONArray();
-  for (int i = 0; i < ws.questions.size(); i++) {
-    Question q = ws.questions.get(i);
-    JSONObject qObj = new JSONObject();
-    qObj.setString("text", q.text);
-    JSONArray optArr = new JSONArray();
-    for (int j = 0; j < q.options.length; j++) {
-      optArr.setString(j, q.options[j]);
-    }
-    qObj.setJSONArray("options", optArr);
-    qArr.setJSONObject(i, qObj);
-  }
-
-  JSONObject msg = new JSONObject();
-  msg.setString("type", "quiz_data");
-  msg.setString("workshop", ws.title);
-  msg.setString("content", ws.content.replace("\n", "[nl]").replace("\r", ""));  // Contenido de estudio
-  msg.setJSONArray("questions", qArr);
-  String msgStr = toJSONLine(msg) + "\n";
-
-  int sentCount = 0;
-  for (Student s : students) {
-    if (s.connected && s.client != null && s.client.active()) {
-      s.client.write(msgStr);
-      sentCount++;
-    }
-  }
-  setStatus("Taller '" + ws.title + "' enviado a " + sentCount + " alumnos");
-}
-
 // ===== DATA PERSISTENCE =====
 
 // Busca un estudiante por grado, número y nombre (para reconexión)
@@ -993,7 +905,6 @@ void mousePressed() {
 
   if (currentTab.equals("talleres")) handleTalleresMouse();
   else if (currentTab.equals("notas")) handleNotasMouse();
-  else if (currentTab.equals("enviartaller")) handleEnviarMouse();
   else if (currentTab.equals("historial")) handleHistorialMouse();
 
   tfTitle.handleMouse();
@@ -1052,19 +963,6 @@ void handleNotasMouse() {
   else if (btnGradeFilterWorkshop.isMouseOver()) {
     if (selectedWorkshopIndex >= 0 && selectedWorkshopIndex < workshops.size())
       gradeFilterWorkshop = workshops.get(selectedWorkshopIndex).title;
-  }
-}
-
-void handleEnviarMouse() {
-  int y = 120;
-  for (int i = 0; i < workshops.size(); i++) {
-    int rowY = y + i * 32;
-    if (mouseX >= 20 && mouseX <= 320 && mouseY >= rowY && mouseY <= rowY + 28) {
-      selectedWorkshopIndex = i; return;
-    }
-  }
-  if (mouseX >= 620 && mouseX <= 760 && mouseY >= 90 && mouseY <= 122 && selectedWorkshopIndex >= 0) {
-    sendWorkshopToAll(selectedWorkshopIndex);
   }
 }
 

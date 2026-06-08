@@ -1,3 +1,16 @@
-{
-  "grades": []
-}
+{"grades": [{
+  "grado": "1",
+  "score": 2,
+  "total": 5,
+  "numero": 1,
+  "workshopTitle": "Operaciones Básicas con Fracciones",
+  "answers": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "nombre": "james",
+  "timestamp": 1780886467937
+}]}
