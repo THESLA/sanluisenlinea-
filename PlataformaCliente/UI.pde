@@ -48,11 +48,13 @@ class Button {
     noStroke();
     rect(x, y, w, h, cornerRadius);
 
-    // Texto blanco centrado
+    // Texto blanco centrado, contenido dentro del botón con padding
     fill(255);
     textAlign(CENTER, CENTER);
-    textSize(constrain(w * 0.1, 12, 16));
-    text(label, x + w/2, y + h/2);
+    float labelSize = constrain(w * 0.1, 11, 15);
+    textSize(labelSize);
+    // Usar bounding box para que el texto no se salga del botón
+    text(label, x + 6, y + 2, w - 12, h - 4);
 
     // Efecto de brillo sutil al pasar el mouse
     if (sobre) {

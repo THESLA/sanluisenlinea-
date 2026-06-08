@@ -159,19 +159,19 @@ void layout() {
   // Workshop screen
   setBtn(btnDisconnect, width - 150, 12, 130, 30);
 
-  // Quiz bottom buttons
+  // Quiz bottom buttons — mínimo más amplio para que el texto no se monte
   float bby = height - 55;
-  float bbw = constrain(width * 0.16, 90, 140);
-  float bbh = 36;
+  float bbw = constrain(width * 0.18, 110, 150);
+  float bbh = 38;
   setBtn(btnPrevQuestion, width * 0.04, bby, bbw, bbh);
-  setBtn(btnNextQuestion, width * 0.04 + bbw + 15, bby, bbw, bbh);
-  setBtn(btnSubmitQuiz, width * 0.04 + (bbw + 15) * 2, bby, bbw, bbh);
+  setBtn(btnNextQuestion, width * 0.04 + bbw + 12, bby, bbw, bbh);
+  setBtn(btnSubmitQuiz, width * 0.04 + (bbw + 12) * 2, bby, bbw, bbh);
 
   // Results button
-  setBtn(btnBackToWorkshops, width * 0.04, bby, constrain(width * 0.25, 150, 220), bbh);
+  setBtn(btnBackToWorkshops, width * 0.04, bby, constrain(width * 0.3, 170, 240), bbh);
 
-  // Reading screen button (más ancho para "Comenzar Evaluación")
-  setBtn(btnStartQuiz, width * 0.04 + constrain(width * 0.25, 150, 220) + 15, bby, constrain(width * 0.25, 160, 220), bbh);
+  // Reading screen button ("Comenzar Evaluación" necesita más espacio)
+  setBtn(btnStartQuiz, width * 0.04 + constrain(width * 0.3, 170, 240) + 15, bby, constrain(width * 0.32, 190, 250), bbh);
 
   textSize(fs);
 }
@@ -700,11 +700,13 @@ void drawQuizScreen() {
     noStroke();
     text((char)('A' + i), badgeX, badgeY);
 
-    // Texto de la opción
+    // Texto de la opción — ancho calculado para no montarse sobre el borde
+    float optTextX = badgeX + badgeR + 12;
+    float optTextW = (width - optPad) - optTextX - 10;
     fill(selected ? 255 : TEXTO_OSCURO);
     textAlign(LEFT, CENTER);
     textSize(optSize);
-    text(q.options[i], badgeX + badgeR + 16, optY + optH / 2, width - optPad * 2 - badgeR - 32, optH);
+    text(q.options[i], optTextX, optY + optH / 2, optTextW, optH);
   }
 
   // Bottom navigation buttons (píldoras)

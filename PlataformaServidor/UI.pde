@@ -46,11 +46,11 @@ class Button {
     noStroke();
     rect(x, y, w, h, r);
 
-    // Texto
+    // Texto contenido dentro del botón con padding
     fill(255);
     textAlign(CENTER, CENTER);
-    textSize(constrain(h * 0.42, 11, 13));
-    text(label, x + w/2, y + h/2);
+    textSize(constrain(w * 0.11, 11, 13));
+    text(label, x + 5, y + 2, w - 10, h - 4);
   }
 
   boolean isMouseOver() {
