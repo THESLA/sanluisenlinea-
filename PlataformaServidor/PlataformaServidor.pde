@@ -300,13 +300,25 @@ void drawEstudiantesTab() {
   stroke(GRIS_BORDE);
   rect(10, 55, width - 20, height - 70, 8);
 
+  // Contar cuántos están realmente conectados
+  int connectedCount = 0;
+  for (Student s : students) {
+    if (s.connected && s.client != null && s.client.active()) connectedCount++;
+  }
+
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(16);
-  text("Estudiantes Conectados: " + students.size(), 20, 60);
+  text("Estudiantes", 20, 60);
 
-  int y = 90;
-  int[] cols = {30, 60, 70, 180, 120, 100, 100};
+  fill(AZUL_ACCENTO);
+  textSize(13);
+  text("🟢 " + connectedCount + " conectados", 20, 80);
+  fill(120);
+  text("(" + students.size() + " en total)", 150, 80);
+
+  int y = 105;
+  int[] cols = {30, 60, 70, 180, 120, 100, 80};
   String[] headers = {"#", "Grado", "Nro", "Nombre", "IP", "ID", "Estado"};
 
   int xp = 20;
@@ -321,21 +333,43 @@ void drawEstudiantesTab() {
   y += 25;
   for (int i = 0; i < students.size(); i++) {
     Student s = students.get(i);
-    int rowY = y + i * 24;
+    int rowY = y + i * 26;
     if (rowY > height - 30) break;
+
+    // Fondo alternado
     fill(i % 2 == 0 ? CREMA_FONDO : BLANCO_TARJETA);
     noStroke();
-    rect(11, rowY, width - 22, 23);
+    rect(11, rowY, width - 22, 25);
+
+    // Indicador circular de estado
+    boolean active = s.connected && s.client != null && s.client.active();
+    int dotX = 15;
+    int dotY = rowY + 7;
+    if (active) {
+      fill(#27AE60);  // verde
+    } else {
+      fill(#E74C3C);  // rojo
+    }
+    noStroke();
+    ellipse(dotX, dotY, 10, 10);
+
     fill(TEXTO_OSCURO);
     textSize(12);
     xp = 20;
+    textAlign(LEFT, TOP);
     text((i+1), xp, rowY + 4); xp += cols[0];
     text(s.grado, xp, rowY + 4); xp += cols[1];
     text(str(s.numero), xp, rowY + 4); xp += cols[2];
     text(s.nombre, xp, rowY + 4); xp += cols[3];
     text(s.ip, xp, rowY + 4); xp += cols[4];
     text(str(s.id), xp, rowY + 4); xp += cols[5];
-    text(s.connected ? "Conectado" : "Desconectado", xp, rowY + 4);
+    if (active) {
+      fill(#27AE60);
+      text("Conectado", xp, rowY + 4);
+    } else {
+      fill(#E74C3C);
+      text("Desconectado", xp, rowY + 4);
+    }
   }
 }
 
@@ -597,19 +631,25 @@ void rebuildHistStudentList() {
 // ===== NETWORKING =====
 
 void handleNetwork() {
+  // Procesar TODOS los mensajes pendientes de TODOS los clientes
+  int maxIter = 100; // seguridad anti-bucle infinito
   Client c = server.available();
-  if (c != null) {
+  while (c != null && maxIter > 0) {
+    maxIter--;
     String msg = c.readStringUntil('\n');
     if (msg != null) {
       msg = msg.trim();
       if (msg.length() > 0) processMessage(c, msg);
     }
+    c = server.available();
   }
+
+  // Eliminar estudiantes que se desconectaron abruptamente
   for (int i = students.size() - 1; i >= 0; i--) {
     Student s = students.get(i);
     if (s.client != null && !s.client.active()) {
-      s.connected = false;
-      setStatus(s.nombre + " se ha desconectado");
+      setStatus(s.nombre + " (" + s.grado + " - #" + s.numero + ") se ha desconectado");
+      students.remove(i);
     }
   }
 }
@@ -623,22 +663,28 @@ void processMessage(Client c, String msg) {
       String nombre = json.getString("nombre", "Desconocido");
       String grado = json.getString("grado", "");
       int numero = json.getInt("numero", 0);
-      Student s = new Student();
+
+      // Buscar si ya existe (reconexión)
+      Student s = findStudent(grado, numero, nombre);
+      boolean isReconnect = (s != null);
+      if (s == null) {
+        s = new Student();
+        students.add(s);
+      }
       s.nombre = nombre;
       s.grado = grado;
       s.numero = numero;
       s.ip = c.ip();
       s.client = c;
-      s.id = nextClientId++;
       s.connected = true;
-      students.add(s);
+      if (!isReconnect) s.id = nextClientId++;
 
       JSONObject response = new JSONObject();
       response.setString("type", "connected");
       response.setInt("id", s.id);
       response.setString("nombre", s.nombre);
       c.write(response.toString() + "\n");
-      setStatus("Alumno conectado: " + grado + " - #" + numero + " - " + nombre);
+      setStatus((isReconnect ? "Reconectado" : "Alumno conectado") + ": " + grado + " - #" + numero + " - " + nombre);
 
       // Enviar automáticamente talleres al alumno (escapando \\n para TCP)
       JSONArray wList = new JSONArray();
@@ -785,6 +831,16 @@ void sendWorkshopToAll(int workshopIndex) {
 }
 
 // ===== DATA PERSISTENCE =====
+
+// Busca un estudiante por grado, número y nombre (para reconexión)
+Student findStudent(String grado, int numero, String nombre) {
+  for (Student s : students) {
+    if (s.grado.equals(grado) && s.numero == numero && s.nombre.equals(nombre)) {
+      return s;
+    }
+  }
+  return null;
+}
 
 void loadWorkshops() {
   workshops.clear();
