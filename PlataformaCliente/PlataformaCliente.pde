@@ -67,7 +67,7 @@ void setup() {
   surface.setTitle("Plataforma Educativa - Alumno");
 
   // Cargar tipografías
-  fontUbuntu = createFont("Ubuntu", 14, true);   // Sans-serif principal (Ubuntu)
+  fontUbuntu = createFont("Ubuntu-Regular.ttf", 14, true); // Cargar desde data/
   fontGaramond = createFont("Garamond", 24, true);// Serif para lectura de talleres
 
   tfServerIP = new TextField(0, 0, 0, 0);
