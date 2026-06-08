@@ -612,14 +612,14 @@ void drawLecturaScreen() {
 void drawJustifiedLine(String line, float x, float y, float w, float h, boolean isLastLine) {
   String[] lineWords = split(line, ' ');
   if (lineWords.length <= 1 || isLastLine) {
-    // Última línea o una sola palabra: alineación izquierda normal
-    text(line, x, y, w, h);
+    // Última línea o una sola palabra: alineación izquierda (sin bounding box)
+    text(line, x, y);
     return;
   }
 
   // Calcular ancho de cada palabra
-  float[] wordWidths = new float[lineWords.length];
   float totalWordW = 0;
+  float[] wordWidths = new float[lineWords.length];
   for (int i = 0; i < lineWords.length; i++) {
     wordWidths[i] = textWidth(lineWords[i]);
     totalWordW += wordWidths[i];
@@ -629,10 +629,10 @@ void drawJustifiedLine(String line, float x, float y, float w, float h, boolean 
   float extraSpace = w - totalWordW;
   float spaceBetween = extraSpace / (lineWords.length - 1);
 
-  // Dibujar palabra por palabra con el espacio justificado
+  // Dibujar palabra por palabra SIN bounding box para evitar recortes
   float curX = x;
   for (int i = 0; i < lineWords.length; i++) {
-    text(lineWords[i], curX, y, wordWidths[i], h);
+    text(lineWords[i], curX, y);
     curX += wordWidths[i] + spaceBetween;
   }
 }
