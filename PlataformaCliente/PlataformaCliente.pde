@@ -32,6 +32,7 @@ boolean quizSubmitted = false;
 int quizScore = 0, quizTotal = 0;
 boolean[] quizResults;
 int readingScrollOffset = 0;  // Scroll vertical en pantalla de lectura
+int scrollBtnUpX, scrollBtnUpY_, scrollBtnDownX, scrollBtnDownY_, scrollBtnSize_;
 
 // Reconnection
 boolean wasConnected = false;
@@ -505,16 +506,35 @@ void drawLecturaScreen() {
     }
   }
 
-  // Indicadores de scroll minimalistas
-  float arrSize = constrain(width * 0.022, 12, 18);
-  if (readingScrollOffset > 0) {
-    fill(AZUL_ACCENTO, 180); textAlign(CENTER, TOP); textSize(arrSize);
-    text("▲", width/2, padY + 2);
-  }
-  if (readingScrollOffset < maxScroll) {
-    fill(AZUL_ACCENTO, 180); textAlign(CENTER, BOTTOM); textSize(arrSize);
-    text("▼", width/2, padY + contentH - 4);
-  }
+  // Botones de scroll Subir/Bajar (para PC sin rueda de mouse)
+  float scrollBtnSize = 32;
+  float scrollBtnX = padX + contentW - scrollBtnSize - 4;
+  float scrollBtnUpY = padY + 4;
+  float scrollBtnDownY = padY + contentH - scrollBtnSize - 4;
+
+  // Track de scroll (barra vertical sutil)
+  noStroke();
+  fill(0, 0, 0, 20);
+  rect(scrollBtnX, padY, scrollBtnSize, contentH, scrollBtnSize/2);
+
+  // Botón Subir
+  boolean hoverUp = mouseX >= scrollBtnX && mouseX <= scrollBtnX + scrollBtnSize && mouseY >= scrollBtnUpY && mouseY <= scrollBtnUpY + scrollBtnSize;
+  fill(readingScrollOffset > 0 ? (hoverUp ? AZUL_OSCURO : AZUL_ACCENTO) : color(200));
+  rect(scrollBtnX, scrollBtnUpY, scrollBtnSize, scrollBtnSize, scrollBtnSize/2);
+  fill(readingScrollOffset > 0 ? 255 : 180);
+  textAlign(CENTER, CENTER); textSize(16);
+  text("▲", scrollBtnX + scrollBtnSize/2, scrollBtnUpY + scrollBtnSize/2);
+
+  // Botón Bajar
+  boolean hoverDown = mouseX >= scrollBtnX && mouseX <= scrollBtnX + scrollBtnSize && mouseY >= scrollBtnDownY && mouseY <= scrollBtnDownY + scrollBtnSize;
+  fill(readingScrollOffset < maxScroll ? (hoverDown ? AZUL_OSCURO : AZUL_ACCENTO) : color(200));
+  rect(scrollBtnX, scrollBtnDownY, scrollBtnSize, scrollBtnSize, scrollBtnSize/2);
+  fill(readingScrollOffset < maxScroll ? 255 : 180);
+  text("▼", scrollBtnX + scrollBtnSize/2, scrollBtnDownY + scrollBtnSize/2);
+
+  // Guardar posición de botones para el mousePressed
+  scrollBtnUpX = (int)scrollBtnX; scrollBtnUpY_ = (int)scrollBtnUpY; scrollBtnDownX = (int)scrollBtnX; scrollBtnDownY_ = (int)scrollBtnDownY;
+  scrollBtnSize_ = (int)scrollBtnSize;
 
   // Botón al fondo - "Comenzar Evaluación" solo si hay preguntas
   float bby = height - 55;
@@ -1107,6 +1127,13 @@ void mousePressed() {
       currentScreen = "talleres"; requestWorkshopList(); return;
     }
     if (btnDisconnect.isMouseOver()) { disconnect(); return; }
+    // Botones de scroll Subir/Bajar
+    if (mouseX >= scrollBtnUpX && mouseX <= scrollBtnUpX + scrollBtnSize_ && mouseY >= scrollBtnUpY_ && mouseY <= scrollBtnUpY_ + scrollBtnSize_) {
+      readingScrollOffset = max(0, readingScrollOffset - 5); return;
+    }
+    if (mouseX >= scrollBtnDownX && mouseX <= scrollBtnDownX + scrollBtnSize_ && mouseY >= scrollBtnDownY_ && mouseY <= scrollBtnDownY_ + scrollBtnSize_) {
+      readingScrollOffset += 5; return;
+    }
     if (btnStartQuiz.isMouseOver()) {
       // Ir al quiz SOLO si hay preguntas cargadas
       if (currentQuiz.size() > 0) {
