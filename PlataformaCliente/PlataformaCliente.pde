@@ -33,6 +33,9 @@ String savedServerIP = "";
 int savedServerPort = 5204;
 String savedGrado = "", savedNumero = "", savedNombre = "";
 
+// Local persistence buffer (guardar respuestas si no hay conexión)
+final String BUFFER_FILE = "data/respuestas_pendientes.json";
+
 // UI Controls
 Button btnConnect, btnDisconnect, btnPrevQuestion, btnNextQuestion, btnSubmitQuiz, btnBackToWorkshops;
 TextField tfServerIP, tfPort, tfGrado, tfNumero, tfNombre;
@@ -431,6 +434,9 @@ void handleReconnection() {
       sendMessage(req);
 
       if (currentScreen.equals("conectar")) currentScreen = "talleres";
+
+      // Al reconectar, verificar si hay respuestas pendientes por enviar
+      checkPendingOnReconnect();
     }
   } catch (Exception e) {
     println("Reintento fallido: " + e.getMessage());
@@ -474,6 +480,8 @@ void processServerMessage(String msg) {
       quizSubmitted = true;
       currentScreen = "resultados";
       setStatus("Nota: " + quizScore + "/" + quizTotal);
+      // Si estas respuestas venían del buffer local, lo limpiamos
+      clearPendingAnswers();
     }
   } catch (Exception e) {
     println("Error parsing: " + e.getMessage());
@@ -497,6 +505,14 @@ void submitAnswers() {
   JSONArray ansArr = new JSONArray();
   for (int i = 0; i < studentAnswers.length; i++)
     ansArr.setInt(i, studentAnswers[i] >= 0 ? studentAnswers[i] : 0);
+
+  // Si no hay conexión, guardamos en buffer local
+  if (!isConnected) {
+    savePendingAnswers();
+    setStatus("Sin conexión. Respuestas guardadas. Se enviarán al reconectar.");
+    return;
+  }
+
   JSONObject msg = new JSONObject();
   msg.setString("type", "submit_answers");
   msg.setString("workshop", currentWorkshopTitle);
@@ -506,6 +522,106 @@ void submitAnswers() {
 
 void setStatus(String msg) {
   statusMessage = msg; statusTimer = 300; println(msg);
+}
+
+// ===== LOCAL PERSISTENCE BUFFER =====
+// Guarda las respuestas actuales en un archivo local para no perder
+// el progreso si la conexión falla o se apaga la computadora.
+
+void savePendingAnswers() {
+  try {
+    JSONObject buffer = new JSONObject();
+    buffer.setString("workshopTitle", currentWorkshopTitle);
+    JSONArray ansArr = new JSONArray();
+    for (int i = 0; i < studentAnswers.length; i++)
+      ansArr.setInt(i, studentAnswers[i]);
+    buffer.setJSONArray("answers", ansArr);
+    buffer.setInt("currentQuestion", currentQuestionIndex);
+    saveJSONObject(buffer, BUFFER_FILE);
+    println("[Buffer] Respuestas guardadas en: " + BUFFER_FILE);
+  } catch (Exception e) {
+    println("[Buffer] Error al guardar: " + e.getMessage());
+  }
+}
+
+boolean hasPendingAnswers() {
+  try {
+    String[] lines = loadStrings(BUFFER_FILE);
+    if (lines == null || lines.length == 0) return false;
+    String content = join(lines, "").trim();
+    return content.length() > 0 && !content.equals("{}");
+  } catch (Exception e) {
+    return false;
+  }
+}
+
+JSONObject loadPendingAnswers() {
+  try {
+    String[] lines = loadStrings(BUFFER_FILE);
+    if (lines != null) {
+      String json = join(lines, "\n");
+      if (json.trim().length() > 0) return JSONObject.parse(json);
+    }
+  } catch (Exception e) {
+    println("[Buffer] Error al cargar: " + e.getMessage());
+  }
+  return null;
+}
+
+void clearPendingAnswers() {
+  try {
+    saveJSONObject(new JSONObject(), BUFFER_FILE);
+    println("[Buffer] Archivo de respuestas pendientes limpiado");
+  } catch (Exception e) {
+    println("[Buffer] Error al limpiar: " + e.getMessage());
+  }
+}
+
+// Envía las respuestas guardadas en el buffer al servidor
+void submitPendingFromBuffer() {
+  JSONObject buffer = loadPendingAnswers();
+  if (buffer == null) {
+    println("[Buffer] No hay respuestas pendientes para enviar");
+    return;
+  }
+
+  String workshopTitle = buffer.getString("workshopTitle", "");
+  JSONArray ansArr = buffer.getJSONArray("answers");
+
+  if (workshopTitle.length() == 0 || ansArr == null) {
+    println("[Buffer] Buffer corrupto, limpiando...");
+    clearPendingAnswers();
+    return;
+  }
+
+  // Mostrar mensaje al alumno
+  setStatus("Enviando respuestas guardadas del taller: " + workshopTitle);
+
+  // Cargar el taller en el cliente para que el alumno vea el resultado
+  currentWorkshopTitle = workshopTitle;
+  currentQuestionIndex = buffer.getInt("currentQuestion", 0);
+  studentAnswers = new int[ansArr.size()];
+  for (int i = 0; i < ansArr.size(); i++)
+    studentAnswers[i] = ansArr.getInt(i);
+
+  // Enviar al servidor
+  JSONObject msg = new JSONObject();
+  msg.setString("type", "submit_answers");
+  msg.setString("workshop", workshopTitle);
+  msg.setJSONArray("answers", ansArr);
+  sendMessage(msg);
+  println("[Buffer] Enviando respuestas pendientes: " + workshopTitle);
+}
+
+// Verifica al reconectar si hay respuestas pendientes y las envía
+void checkPendingOnReconnect() {
+  if (hasPendingAnswers()) {
+    println("[Buffer] Detectadas respuestas pendientes al reconectar");
+    // Solo auto-enviamos si no estamos en medio de un quiz
+    if (currentScreen.equals("talleres") || currentScreen.equals("conectar")) {
+      submitPendingFromBuffer();
+    }
+  }
 }
 
 // ===== MOUSE & KEYBOARD =====
