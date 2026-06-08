@@ -498,24 +498,26 @@ void drawLecturaScreen() {
     started = true;
 
     String[] words = split(para, ' ');
+    // Primera pasada: separar en líneas
+    ArrayList<String> lines = new ArrayList<String>();
     String currentLine = "";
     for (String w : words) {
       String testLine = currentLine.length() == 0 ? w : currentLine + " " + w;
       if (textWidth(testLine) > contentInnerW && currentLine.length() > 0) {
-        lineCount++;
-        if (lineCount > skipLines && drawY + lineH <= padY + contentH - 6) {
-          text(currentLine, textLeft, drawY, contentInnerW, lineH);
-          drawY += lineH;
-        }
+        lines.add(currentLine);
         currentLine = w;
       } else {
         currentLine = testLine;
       }
     }
-    if (currentLine.length() > 0) {
+    if (currentLine.length() > 0) lines.add(currentLine);
+
+    // Segunda pasada: dibujar cada línea (justificada excepto la última)
+    for (int li = 0; li < lines.size(); li++) {
       lineCount++;
       if (lineCount > skipLines && drawY + lineH <= padY + contentH - 6) {
-        text(currentLine, textLeft, drawY, contentInnerW, lineH);
+        boolean isLastLine = (li == lines.size() - 1);
+        drawJustifiedLine(lines.get(li), textLeft, drawY, contentInnerW, lineH, isLastLine);
         drawY += lineH;
       }
     }
@@ -605,6 +607,35 @@ void drawLecturaScreen() {
 
 // ===== QUIZ SCREEN =====
 // Opciones tipo píldora, selección azul cobalto, progreso visual
+
+// Dibuja una línea de texto justificada (excepto si es la última del párrafo)
+void drawJustifiedLine(String line, float x, float y, float w, float h, boolean isLastLine) {
+  String[] lineWords = split(line, ' ');
+  if (lineWords.length <= 1 || isLastLine) {
+    // Última línea o una sola palabra: alineación izquierda normal
+    text(line, x, y, w, h);
+    return;
+  }
+
+  // Calcular ancho de cada palabra
+  float[] wordWidths = new float[lineWords.length];
+  float totalWordW = 0;
+  for (int i = 0; i < lineWords.length; i++) {
+    wordWidths[i] = textWidth(lineWords[i]);
+    totalWordW += wordWidths[i];
+  }
+
+  // Espacio extra a repartir entre palabras
+  float extraSpace = w - totalWordW;
+  float spaceBetween = extraSpace / (lineWords.length - 1);
+
+  // Dibujar palabra por palabra con el espacio justificado
+  float curX = x;
+  for (int i = 0; i < lineWords.length; i++) {
+    text(lineWords[i], curX, y, wordWidths[i], h);
+    curX += wordWidths[i] + spaceBetween;
+  }
+}
 
 void drawQuizScreen() {
   // Header azul
