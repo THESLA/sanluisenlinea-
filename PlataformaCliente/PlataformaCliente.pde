@@ -162,62 +162,55 @@ void setBtn(Button b, float x, float y, float w, float h) {
 }
 
 // ===== LOGIN SCREEN =====
-// Fondo azul sólido, tarjeta blanca centrada, campos con ESPACIO VISIBLE entre cajitas
+// Fondo azul sólido, tarjeta blanca centrada, compacta y arriba
 
 void drawLoginScreen() {
   float cx = width / 2;
-  float tarjetaW = constrain(width * 0.5, 340, 460);
+  float tarjetaW = constrain(width * 0.5, 340, 450);
   float tarjetaX = cx - tarjetaW / 2;
-  float tarjetaY = height * 0.09;
+  float tarjetaY = height * 0.06;
 
-  float campoH = 34;          // Alto de cada cajita de texto
-  float campoW = tarjetaW - 68;  // Ancho de las cajitas
-  float lx = tarjetaX + 34;     // Margen izquierdo del contenido
-  float labelSize = constrain(width * 0.015, 12, 14);
+  float campoH = 30;          // Cajitas un poco más bajas
+  float campoW = tarjetaW - 64;
+  float lx = tarjetaX + 32;
+  float labelSize = constrain(width * 0.014, 11, 13);
 
-  // --- Espaciado entre filas de campos ---
-  // Cada "fila" tiene: etiqueta (14px) + gapChico (4px) + cajita (campoH)
-  //  => alto de fila ≈ 52px
-  // Luego, entre el borde INFERIOR de una cajita y la etiqueta de la siguiente,
-  // dejamos un espacio VISIBLE de 22px.
-  // Así: de borde-superior de cajita a borde-superior de siguiente cajita =
-  //       campoH + 22 + 14 + 4 = 34 + 22 + 14 + 4 = 74px
-  // Espacio visible entre cajitas = 22 + 14 + 4 = 40px
-  float campoTopGap = campoH + 22 + 14 + 4;  // 74px de top-a-top entre cajitas
+  // Espacio de top-a-top entre cajitas: cajita(30) + gap(12) + label(13) + gap(3) = 58
+  float campoTopGap = 58;
 
-  // Altura total de la tarjeta
-  float tarjetaH = 84 + 20 + 56 + campoH + 24 + 62 + campoH * 3 + campoTopGap * 2 + 44 + 32;
+  // Altura de la tarjeta (mucho más compacta)
+  float tarjetaH = 62 + 14 + 44 + campoH + 18 + 50 + campoH * 3 + campoTopGap * 2 + 36 + 26;
 
-  // Icono de graduación
+  // Icono de graduación (más pequeño y pegado a la tarjeta)
   noStroke();
   fill(255);
-  drawIconGraduation(cx, tarjetaY - 36, 44);
+  drawIconGraduation(cx, tarjetaY - 28, 34);
 
   // Tarjeta blanca
   noStroke();
-  fill(0, 0, 0, 30);
-  rect(tarjetaX + 3, tarjetaY + 5, tarjetaW, tarjetaH, 20);
+  fill(0, 0, 0, 25);
+  rect(tarjetaX + 2, tarjetaY + 4, tarjetaW, tarjetaH, 18);
   fill(BLANCO_TARJETA);
-  rect(tarjetaX, tarjetaY, tarjetaW, tarjetaH, 20);
+  rect(tarjetaX, tarjetaY, tarjetaW, tarjetaH, 18);
 
-  // Título
+  // Título (más compacto)
   fill(AZUL_ACCENTO);
   textAlign(CENTER, TOP);
-  float tituloSize = constrain(width * 0.028, 18, 26);
+  float tituloSize = constrain(width * 0.026, 17, 24);
   textSize(tituloSize);
-  text("San Luis en línea", cx, tarjetaY + 24);
-  textSize(tituloSize * 0.55);
+  text("San Luis en línea", cx, tarjetaY + 18);
+  textSize(tituloSize * 0.52);
   fill(TEXTO_SUAVE);
-  text("Alumno", cx, tarjetaY + 52);
+  text("Alumno", cx, tarjetaY + 42);
 
-  // Línea divisoria
-  float divY = tarjetaY + 76;
-  stroke(CREMA_FONDO);
+  // División corta justo debajo del título
+  float divY = tarjetaY + 60;
+  stroke(230, 225, 218);
   strokeWeight(1);
-  line(tarjetaX + 30, divY, tarjetaX + tarjetaW - 30, divY);
+  line(tarjetaX + 40, divY, tarjetaX + tarjetaW - 40, divY);
 
-  // ===== SECCIÓN SERVIDOR =====
-  float secY = divY + 14;
+  // ===== SERVIDOR =====
+  float secY = divY + 12;
   fill(AZUL_ACCENTO);
   textAlign(LEFT, TOP);
   textSize(labelSize);
@@ -225,60 +218,59 @@ void drawLoginScreen() {
 
   float ipW = campoW * 0.55;
   float portW = campoW * 0.35;
-  float portX = lx + ipW + 18;
-  float serverY = secY + 22;
+  float portX = lx + ipW + 16;
+  float serverY = secY + 18;
 
   fill(TEXTO_SUAVE);
   textSize(labelSize - 1);
-  text("Dirección IP", lx, serverY - 14);
+  text("Dirección IP", lx, serverY - 12);
   tfServerIP.setPlaceholder("127.0.0.1");
   setTF(tfServerIP, lx, serverY, ipW, campoH);
   tfServerIP.draw();
 
   fill(TEXTO_SUAVE);
-  text("Puerto", portX, serverY - 14);
+  text("Puerto", portX, serverY - 12);
   tfPort.setPlaceholder("5204");
   setTF(tfPort, portX, serverY, portW, campoH);
   tfPort.draw();
 
   // ===== DATOS DEL ALUMNO =====
-  float alumnoY = serverY + campoH + 24;
+  float alumnoY = serverY + campoH + 16;
   fill(AZUL_ACCENTO);
   textSize(labelSize);
   textAlign(LEFT, TOP);
   text("Datos del Alumno", lx, alumnoY);
 
-  // Posición del primer campo de alumno
-  float row1Y = alumnoY + 22;
+  float row1Y = alumnoY + 18;
 
-  // ---- Fila 1: Grado ----
+  // Fila 1: Grado
   fill(TEXTO_SUAVE);
   textSize(labelSize - 1);
-  text("Grado / Sección", lx, row1Y - 14);
+  text("Grado / Sección", lx, row1Y - 12);
   tfGrado.setPlaceholder("Ej: 5A");
   setTF(tfGrado, lx, row1Y, campoW, campoH);
   tfGrado.draw();
 
-  // ---- Fila 2: Número ----
+  // Fila 2: Número
   float row2Y = row1Y + campoTopGap;
   fill(TEXTO_SUAVE);
-  text("Número en lista", lx, row2Y - 14);
+  text("Número en lista", lx, row2Y - 12);
   tfNumero.setPlaceholder("Ej: 12");
   setTF(tfNumero, lx, row2Y, campoW, campoH);
   tfNumero.draw();
 
-  // ---- Fila 3: Nombre ----
+  // Fila 3: Nombre
   float row3Y = row2Y + campoTopGap;
   fill(TEXTO_SUAVE);
-  text("Primer nombre", lx, row3Y - 14);
+  text("Primer nombre", lx, row3Y - 12);
   tfNombre.setPlaceholder("Ej: Juan");
   setTF(tfNombre, lx, row3Y, campoW, campoH);
   tfNombre.draw();
 
-  // ===== BOTÓN CONECTAR =====
-  float btnY = row3Y + campoH + 28;
-  float btnW = constrain(width * 0.3, 180, 250);
-  setBtn(btnConnect, cx - btnW/2, btnY, btnW, 44);
+  // Botón Conectar
+  float btnY = row3Y + campoH + 20;
+  float btnW = constrain(width * 0.3, 180, 240);
+  setBtn(btnConnect, cx - btnW/2, btnY, btnW, 40);
   btnConnect.draw(AZUL_ACCENTO, AZUL_OSCURO);
 }
 
