@@ -413,8 +413,11 @@ void drawLecturaScreen() {
   textAlign(LEFT, TOP);
   fill(TEXTO_OSCURO);
 
+  // Restaurar saltos de línea que vinieron escapados como [nl] por TCP
+  String displayContent = currentWorkshopContent.replace("[nl]", "\n");
+
   // Si no hay contenido, mostrar mensaje
-  if (currentWorkshopContent == null || currentWorkshopContent.length() == 0) {
+  if (displayContent == null || displayContent.length() == 0) {
     fill(TEXTO_SUAVE);
     textSize(readingSize * 0.9);
     textAlign(CENTER, CENTER);
@@ -423,7 +426,7 @@ void drawLecturaScreen() {
   }
 
   // Renderizar contenido con word-wrap y scroll
-  String[] paragraphs = split(currentWorkshopContent, '\n');
+  String[] paragraphs = split(displayContent, '\n');
   float lineH = readingSize * 1.6;
   float contentInnerW = contentW - 20;
 
@@ -767,7 +770,6 @@ void connectToServer() {
       isConnected = true;
       currentScreen = "talleres";
       setStatus("Conectado al servidor");
-      println("[Cliente] Socket conectado, enviando connect...");
 
       JSONObject msg = new JSONObject();
       msg.setString("type", "connect");
@@ -780,10 +782,8 @@ void connectToServer() {
       JSONObject req = new JSONObject();
       req.setString("type", "list_workshops");
       sendMessage(req);
-      println("[Cliente] list_workshops enviado");
     } else {
       setStatus("No se pudo conectar al servidor");
-      println("[Cliente] ERROR: No se pudo conectar al servidor");
     }
   } catch (Exception e) {
     setStatus("Error: " + e.getMessage());
@@ -805,17 +805,13 @@ void disconnect() {
 
 void handleNetwork() {
   if (client == null || !client.active()) {
-    if (isConnected) println("[Cliente] Conexión perdida");
     isConnected = false;
     return;
   }
   String msg = client.readStringUntil('\n');
   if (msg != null) {
     msg = msg.trim();
-    if (msg.length() > 0) {
-      println("[Cliente] Mensaje recibido: " + msg.substring(0, min(80, msg.length())) + "...");
-      processServerMessage(msg);
-    }
+    if (msg.length() > 0) processServerMessage(msg);
   }
 }
 
@@ -877,15 +873,11 @@ void processServerMessage(String msg) {
       JSONArray titles = json.getJSONArray("workshops");
       JSONArray contents = json.getJSONArray("contents");
       JSONArray qCounts = json.getJSONArray("questionCounts");
-      println("[Cliente] Recibidos " + titles.size() + " talleres:");
       for (int i = 0; i < titles.size(); i++) {
         workshopTitles.append(titles.getString(i));
         workshopContents.append(contents.getString(i));
-        int qc = qCounts.getInt(i);
-        workshopQuestionCounts.append(qc);
-        println("  -> " + titles.getString(i) + " (" + qc + " preguntas, " + contents.getString(i).length() + " chars)");
+        workshopQuestionCounts.append(qCounts.getInt(i));
       }
-      println("[Cliente] workshopTitles size: " + workshopTitles.size());
     } else if (type.equals("quiz_data")) {
       currentWorkshopTitle = json.getString("workshop", "");
       currentWorkshopContent = json.getString("content", "");

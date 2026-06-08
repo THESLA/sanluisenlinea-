@@ -95,11 +95,7 @@ void setup() {
   server = new Server(this, PORT);
   loadWorkshops();
   loadGrades();
-  println("[Servidor] Talleres cargados: " + workshops.size());
-  for (int i = 0; i < workshops.size(); i++) {
-    println("  - " + workshops.get(i).title + " (" + workshops.get(i).questions.size() + " preguntas, " + workshops.get(i).content.length() + " caracteres)");
-  }
-  setStatus("Servidor iniciado en puerto " + PORT);
+  setStatus("Servidor iniciado en puerto " + PORT + " (" + workshops.size() + " talleres)");
 }
 
 void draw() {
@@ -644,16 +640,14 @@ void processMessage(Client c, String msg) {
       c.write(response.toString() + "\n");
       setStatus("Alumno conectado: " + grado + " - #" + numero + " - " + nombre);
 
-      // Enviar automáticamente la lista de talleres al alumno conectado
+      // Enviar automáticamente talleres al alumno (escapando \\n para TCP)
       JSONArray wList = new JSONArray();
       JSONArray cList = new JSONArray();
       JSONArray qCountList = new JSONArray();
-      println("[Servidor] Enviando " + workshops.size() + " talleres a " + nombre);
       for (int i = 0; i < workshops.size(); i++) {
         wList.setString(i, workshops.get(i).title);
-        cList.setString(i, workshops.get(i).content);
+        cList.setString(i, workshops.get(i).content.replace("\n", "[nl]").replace("\r", ""));
         qCountList.setInt(i, workshops.get(i).questions.size());
-        println("  -> " + workshops.get(i).title);
       }
       JSONObject wsMsg = new JSONObject();
       wsMsg.setString("type", "workshop_list");
@@ -661,7 +655,6 @@ void processMessage(Client c, String msg) {
       wsMsg.setJSONArray("contents", cList);
       wsMsg.setJSONArray("questionCounts", qCountList);
       c.write(wsMsg.toString() + "\n");
-      println("[Servidor] workshop_list enviado");
 
     } else if (type.equals("list_workshops")) {
       JSONArray wList = new JSONArray();
@@ -669,7 +662,8 @@ void processMessage(Client c, String msg) {
       JSONArray qCountList = new JSONArray();
       for (int i = 0; i < workshops.size(); i++) {
         wList.setString(i, workshops.get(i).title);
-        cList.setString(i, workshops.get(i).content);
+        // Escapar saltos de línea para no romper protocolo TCP
+        cList.setString(i, workshops.get(i).content.replace("\n", "[nl]").replace("\r", ""));
         qCountList.setInt(i, workshops.get(i).questions.size());
       }
       JSONObject response = new JSONObject();
@@ -698,7 +692,7 @@ void processMessage(Client c, String msg) {
         JSONObject response = new JSONObject();
         response.setString("type", "quiz_data");
         response.setString("workshop", ws.title);
-        response.setString("content", ws.content);  // Contenido de estudio
+        response.setString("content", ws.content.replace("\n", "[nl]").replace("\r", ""));  // Contenido de estudio
         response.setJSONArray("questions", qArr);
         c.write(response.toString() + "\n");
       }
@@ -776,7 +770,7 @@ void sendWorkshopToAll(int workshopIndex) {
   JSONObject msg = new JSONObject();
   msg.setString("type", "quiz_data");
   msg.setString("workshop", ws.title);
-  msg.setString("content", ws.content);  // Contenido de estudio
+  msg.setString("content", ws.content.replace("\n", "[nl]").replace("\r", ""));  // Contenido de estudio
   msg.setJSONArray("questions", qArr);
   String msgStr = msg.toString() + "\n";
 
@@ -805,16 +799,19 @@ void loadWorkshops() {
         Workshop w = new Workshop();
         w.title = wObj.getString("title");
         w.content = wObj.getString("content", "");  // Cargar contenido
-        JSONArray qArr = wObj.getJSONArray("questions");
-        for (int j = 0; j < qArr.size(); j++) {
-          JSONObject qObj = qArr.getJSONObject(j);
-          Question q = new Question();
-          q.text = qObj.getString("text");
-          q.correctIndex = qObj.getInt("correctIndex", 0);
-          JSONArray optArr = qObj.getJSONArray("options");
-          q.options = new String[optArr.size()];
-          for (int k = 0; k < optArr.size(); k++) q.options[k] = optArr.getString(k);
-          w.questions.add(q);
+        // Las preguntas son opcionales (taller solo lectura)
+        if (wObj.hasKey("questions")) {
+          JSONArray qArr = wObj.getJSONArray("questions");
+          for (int j = 0; j < qArr.size(); j++) {
+            JSONObject qObj = qArr.getJSONObject(j);
+            Question q = new Question();
+            q.text = qObj.getString("text");
+            q.correctIndex = qObj.getInt("correctIndex", 0);
+            JSONArray optArr = qObj.getJSONArray("options");
+            q.options = new String[optArr.size()];
+            for (int k = 0; k < optArr.size(); k++) q.options[k] = optArr.getString(k);
+            w.questions.add(q);
+          }
         }
         workshops.add(w);
       }
