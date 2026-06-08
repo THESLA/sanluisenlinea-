@@ -16,6 +16,8 @@ String currentScreen = "conectar";
 
 // Data received from server
 StringList workshopTitles = new StringList();
+StringList workshopContents = new StringList();   // Contenido de cada taller
+IntList workshopQuestionCounts = new IntList();   // Cantidad de preguntas por taller
 ArrayList<QuizQuestion> currentQuiz = new ArrayList<QuizQuestion>();
 String currentWorkshopTitle = "";
 String currentWorkshopContent = "";  // Contenido de lectura del taller
@@ -499,12 +501,39 @@ void drawLecturaScreen() {
     text("▼", width/2, padY + contentH - 4);
   }
 
-  // Botón "Comenzar Evaluación" verde al fondo
+  // Botón al fondo - "Comenzar Evaluación" solo si hay preguntas
   float bby = height - 55;
-  btnStartQuiz.draw(VERDE_ACIERTO, color(35, 120, 70));
-  fill(TEXTO_SUAVE); textAlign(LEFT, CENTER);
-  textSize(constrain(width * 0.014, 11, 13));
-  text(currentQuiz.size() + " preguntas", btnStartQuiz.x + btnStartQuiz.w + 12, bby + btnStartQuiz.h/2);
+  boolean hasQuestions = (currentQuiz.size() > 0);
+
+  if (hasQuestions) {
+    // Si las preguntas aún no han llegado del servidor, mostrar "Cargando..."
+    if (currentQuiz.size() > 0) {
+      btnStartQuiz.draw(VERDE_ACIERTO, color(35, 120, 70));
+      fill(255); textAlign(CENTER, CENTER);
+      textSize(constrain(width * 0.016, 12, 14));
+      text("Comenzar Evaluación", btnStartQuiz.x + btnStartQuiz.w/2, bby + btnStartQuiz.h/2);
+      fill(TEXTO_SUAVE); textAlign(LEFT, CENTER);
+      textSize(constrain(width * 0.014, 11, 13));
+      text(currentQuiz.size() + " preguntas", btnStartQuiz.x + btnStartQuiz.w + 12, bby + btnStartQuiz.h/2);
+    }
+  } else {
+    // Taller de solo lectura, sin evaluación
+    noStroke();
+    fill(0, 0, 0, 15);
+    rect(btnStartQuiz.x + 2, bby + 2, btnStartQuiz.w, btnStartQuiz.h, btnStartQuiz.h/2);
+    fill(TEXTO_SUAVE);
+    rect(btnStartQuiz.x, bby, btnStartQuiz.w, btnStartQuiz.h, btnStartQuiz.h/2);
+    fill(BLANCO_TARJETA);
+    textAlign(CENTER, CENTER);
+    textSize(constrain(width * 0.016, 12, 14));
+    text("📖 Solo lectura", btnStartQuiz.x + btnStartQuiz.w/2, bby + btnStartQuiz.h/2);
+
+    // Etiqueta informativa
+    fill(TEXTO_SUAVE);
+    textAlign(LEFT, CENTER);
+    textSize(constrain(width * 0.013, 10, 12));
+    text("Sin evaluación - Copia en tu cuaderno", btnStartQuiz.x + btnStartQuiz.w + 12, bby + btnStartQuiz.h/2);
+  }
 }
 
 // ===== QUIZ SCREEN =====
@@ -766,6 +795,8 @@ void disconnect() {
   currentScreen = "conectar";
   currentQuiz.clear();
   workshopTitles.clear();
+  workshopContents.clear();
+  workshopQuestionCounts.clear();
   setStatus("Desconectado");
 }
 
@@ -834,8 +865,16 @@ void processServerMessage(String msg) {
       studentId = json.getInt("id", 0);
     } else if (type.equals("workshop_list")) {
       workshopTitles.clear();
-      JSONArray arr = json.getJSONArray("workshops");
-      for (int i = 0; i < arr.size(); i++) workshopTitles.append(arr.getString(i));
+      workshopContents.clear();
+      workshopQuestionCounts.clear();
+      JSONArray titles = json.getJSONArray("workshops");
+      JSONArray contents = json.getJSONArray("contents");
+      JSONArray qCounts = json.getJSONArray("questionCounts");
+      for (int i = 0; i < titles.size(); i++) {
+        workshopTitles.append(titles.getString(i));
+        workshopContents.append(contents.getString(i));
+        workshopQuestionCounts.append(qCounts.getInt(i));
+      }
     } else if (type.equals("quiz_data")) {
       currentWorkshopTitle = json.getString("workshop", "");
       currentWorkshopContent = json.getString("content", "");
@@ -855,8 +894,10 @@ void processServerMessage(String msg) {
       currentQuestionIndex = 0;
       quizSubmitted = false;
       readingScrollOffset = 0;
-      // Primero mostrar pantalla de lectura, luego el quiz
-      currentScreen = "lectura";
+      // Si el alumno ya está en quiz o resultados, no cambiar la pantalla
+      if (!currentScreen.equals("quiz") && !currentScreen.equals("resultados")) {
+        currentScreen = "lectura";
+      }
     } else if (type.equals("quiz_result")) {
       quizScore = json.getInt("score", 0);
       quizTotal = json.getInt("total", 0);
@@ -1029,7 +1070,19 @@ void mousePressed() {
     for (int i = wsScrollOffset; i < workshopTitles.size() && i < wsScrollOffset + visibleCount; i++) {
       float rowY = 70 + (i - wsScrollOffset) * itemH;
       if (mouseX >= pad && mouseX <= width - pad && mouseY >= rowY && mouseY <= rowY + itemH - 6) {
-        requestQuiz(workshopTitles.get(i)); return;
+        // Mostrar el contenido del taller directamente
+        currentWorkshopTitle = workshopTitles.get(i);
+        currentWorkshopContent = workshopContents.get(i);
+        readingScrollOffset = 0;
+        // Cargar las preguntas en segundo plano si el taller tiene
+        if (workshopQuestionCounts.get(i) > 0) {
+          requestQuiz(workshopTitles.get(i));
+        } else {
+          currentQuiz.clear();
+          quizSubmitted = false;
+        }
+        currentScreen = "lectura";
+        return;
       }
     }
 
@@ -1040,12 +1093,11 @@ void mousePressed() {
     }
     if (btnDisconnect.isMouseOver()) { disconnect(); return; }
     if (btnStartQuiz.isMouseOver()) {
-      // Ir al quiz si hay preguntas
+      // Ir al quiz SOLO si hay preguntas cargadas
       if (currentQuiz.size() > 0) {
         currentScreen = "quiz";
         currentQuestionIndex = 0;
-      } else {
-        setStatus("Este taller no tiene preguntas");
+        setStatus("Evaluación: " + currentWorkshopTitle);
       }
       return;
     }

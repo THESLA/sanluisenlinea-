@@ -640,14 +640,36 @@ void processMessage(Client c, String msg) {
       c.write(response.toString() + "\n");
       setStatus("Alumno conectado: " + grado + " - #" + numero + " - " + nombre);
 
-    } else if (type.equals("list_workshops")) {
+      // Enviar automáticamente la lista de talleres al alumno conectado
       JSONArray wList = new JSONArray();
+      JSONArray cList = new JSONArray();
+      JSONArray qCountList = new JSONArray();
       for (int i = 0; i < workshops.size(); i++) {
         wList.setString(i, workshops.get(i).title);
+        cList.setString(i, workshops.get(i).content);
+        qCountList.setInt(i, workshops.get(i).questions.size());
+      }
+      JSONObject wsMsg = new JSONObject();
+      wsMsg.setString("type", "workshop_list");
+      wsMsg.setJSONArray("workshops", wList);
+      wsMsg.setJSONArray("contents", cList);
+      wsMsg.setJSONArray("questionCounts", qCountList);
+      c.write(wsMsg.toString() + "\n");
+
+    } else if (type.equals("list_workshops")) {
+      JSONArray wList = new JSONArray();
+      JSONArray cList = new JSONArray();
+      JSONArray qCountList = new JSONArray();
+      for (int i = 0; i < workshops.size(); i++) {
+        wList.setString(i, workshops.get(i).title);
+        cList.setString(i, workshops.get(i).content);
+        qCountList.setInt(i, workshops.get(i).questions.size());
       }
       JSONObject response = new JSONObject();
       response.setString("type", "workshop_list");
       response.setJSONArray("workshops", wList);
+      response.setJSONArray("contents", cList);
+      response.setJSONArray("questionCounts", qCountList);
       c.write(response.toString() + "\n");
 
     } else if (type.equals("request_quiz")) {
