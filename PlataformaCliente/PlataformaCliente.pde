@@ -168,7 +168,7 @@ void drawLoginScreen() {
   float cx = width / 2;
   float tarjetaW = constrain(width * 0.5, 340, 460);
   float tarjetaX = cx - tarjetaW / 2;
-  float tarjetaY = height * 0.11;
+  float tarjetaY = height * 0.09;
 
   float campoH = 34;          // Alto de cada cajita de texto
   float campoW = tarjetaW - 68;  // Ancho de las cajitas
@@ -186,7 +186,7 @@ void drawLoginScreen() {
   float campoTopGap = campoH + 22 + 14 + 4;  // 74px de top-a-top entre cajitas
 
   // Altura total de la tarjeta
-  float tarjetaH = 92 + 20 + 60 + campoH + 32 + 70 + campoH * 3 + campoTopGap * 2 + 44 + 36;
+  float tarjetaH = 84 + 20 + 56 + campoH + 24 + 62 + campoH * 3 + campoTopGap * 2 + 44 + 32;
 
   // Icono de graduación
   noStroke();
@@ -211,13 +211,13 @@ void drawLoginScreen() {
   text("Alumno", cx, tarjetaY + 52);
 
   // Línea divisoria
-  float divY = tarjetaY + 84;
+  float divY = tarjetaY + 76;
   stroke(CREMA_FONDO);
   strokeWeight(1);
   line(tarjetaX + 30, divY, tarjetaX + tarjetaW - 30, divY);
 
   // ===== SECCIÓN SERVIDOR =====
-  float secY = divY + 18;
+  float secY = divY + 14;
   fill(AZUL_ACCENTO);
   textAlign(LEFT, TOP);
   textSize(labelSize);
@@ -242,7 +242,7 @@ void drawLoginScreen() {
   tfPort.draw();
 
   // ===== DATOS DEL ALUMNO =====
-  float alumnoY = serverY + campoH + 32;
+  float alumnoY = serverY + campoH + 24;
   fill(AZUL_ACCENTO);
   textSize(labelSize);
   textAlign(LEFT, TOP);
