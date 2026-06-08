@@ -1,6 +1,14 @@
 import processing.net.*;
 import processing.data.*;
 
+// ===== UTILITY =====
+
+// Serializa JSONObject a string compacto (una sola línea) para no romper protocolo TCP
+// Processing's JSONObject.toString() produce pretty-print con \\n, que interfiere con readStringUntil('\\n')
+String toJSONLine(JSONObject obj) {
+  return obj.toString().replace("\n", "").replace("\r", "");
+}
+
 // Network
 Server server;
 final int PORT = 5204;
@@ -683,7 +691,7 @@ void processMessage(Client c, String msg) {
       response.setString("type", "connected");
       response.setInt("id", s.id);
       response.setString("nombre", s.nombre);
-      c.write(response.toString() + "\n");
+      c.write(toJSONLine(response) + "\n");
       setStatus((isReconnect ? "Reconectado" : "Alumno conectado") + ": " + grado + " - #" + numero + " - " + nombre);
 
       // Enviar automáticamente talleres al alumno (escapando \\n para TCP)
@@ -700,7 +708,7 @@ void processMessage(Client c, String msg) {
       wsMsg.setJSONArray("workshops", wList);
       wsMsg.setJSONArray("contents", cList);
       wsMsg.setJSONArray("questionCounts", qCountList);
-      c.write(wsMsg.toString() + "\n");
+      c.write(toJSONLine(wsMsg) + "\n");
 
     } else if (type.equals("list_workshops")) {
       JSONArray wList = new JSONArray();
@@ -717,7 +725,7 @@ void processMessage(Client c, String msg) {
       response.setJSONArray("workshops", wList);
       response.setJSONArray("contents", cList);
       response.setJSONArray("questionCounts", qCountList);
-      c.write(response.toString() + "\n");
+      c.write(toJSONLine(response) + "\n");
 
     } else if (type.equals("request_quiz")) {
       String wTitle = json.getString("workshop", "");
@@ -740,7 +748,7 @@ void processMessage(Client c, String msg) {
         response.setString("workshop", ws.title);
         response.setString("content", ws.content.replace("\n", "[nl]").replace("\r", ""));  // Contenido de estudio
         response.setJSONArray("questions", qArr);
-        c.write(response.toString() + "\n");
+        c.write(toJSONLine(response) + "\n");
       }
 
     } else if (type.equals("submit_answers")) {
@@ -786,7 +794,7 @@ void processMessage(Client c, String msg) {
         response.setInt("score", score);
         response.setInt("total", total);
         response.setJSONArray("results", resultsArr);
-        c.write(response.toString() + "\n");
+        c.write(toJSONLine(response) + "\n");
 
         setStatus(nombre + " (" + grado + " - #" + numero + ") obtuvo " + score + "/" + total + " en '" + wTitle + "'");
       }
@@ -818,7 +826,7 @@ void sendWorkshopToAll(int workshopIndex) {
   msg.setString("workshop", ws.title);
   msg.setString("content", ws.content.replace("\n", "[nl]").replace("\r", ""));  // Contenido de estudio
   msg.setJSONArray("questions", qArr);
-  String msgStr = msg.toString() + "\n";
+  String msgStr = toJSONLine(msg) + "\n";
 
   int sentCount = 0;
   for (Student s : students) {

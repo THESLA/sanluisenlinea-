@@ -1,6 +1,11 @@
 import processing.net.*;
 import processing.data.*;
 
+// Serializa JSONObject a string compacto (una sola línea) para no romper protocolo TCP
+String toJSONLine(JSONObject obj) {
+  return obj.toString().replace("\n", "").replace("\r", "");
+}
+
 // Network
 Client client;
 String serverIP = "127.0.0.1";
@@ -919,7 +924,7 @@ void processServerMessage(String msg) {
 }
 
 void sendMessage(JSONObject msg) {
-  if (client != null && client.active()) client.write(msg.toString() + "\n");
+  if (client != null && client.active()) client.write(toJSONLine(msg) + "\n");
 }
 
 void requestWorkshopList() {
