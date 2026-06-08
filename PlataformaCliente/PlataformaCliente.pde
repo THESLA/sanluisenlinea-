@@ -18,11 +18,13 @@ String currentScreen = "conectar";
 StringList workshopTitles = new StringList();
 ArrayList<QuizQuestion> currentQuiz = new ArrayList<QuizQuestion>();
 String currentWorkshopTitle = "";
+String currentWorkshopContent = "";  // Contenido de lectura del taller
 int currentQuestionIndex = 0;
 int[] studentAnswers;
 boolean quizSubmitted = false;
 int quizScore = 0, quizTotal = 0;
 boolean[] quizResults;
+int readingScrollOffset = 0;  // Scroll vertical en pantalla de lectura
 
 // Reconnection
 boolean wasConnected = false;
@@ -37,7 +39,7 @@ String savedGrado = "", savedNumero = "", savedNombre = "";
 final String BUFFER_FILE = "data/respuestas_pendientes.json";
 
 // UI Controls
-Button btnConnect, btnDisconnect, btnPrevQuestion, btnNextQuestion, btnSubmitQuiz, btnBackToWorkshops;
+Button btnConnect, btnDisconnect, btnPrevQuestion, btnNextQuestion, btnSubmitQuiz, btnBackToWorkshops, btnStartQuiz;
 TextField tfServerIP, tfPort, tfGrado, tfNumero, tfNombre;
 String statusMessage = "Ingresa tus datos para conectarte";
 int statusTimer = 300;
@@ -64,6 +66,7 @@ void setup() {
   btnNextQuestion = new Button(0, 0, 0, 0, "Siguiente");
   btnSubmitQuiz = new Button(0, 0, 0, 0, "Enviar");
   btnBackToWorkshops = new Button(0, 0, 0, 0, "Volver a Talleres");
+  btnStartQuiz = new Button(0, 0, 0, 0, "Comenzar Evaluación");
 }
 
 void draw() {
@@ -79,6 +82,7 @@ void draw() {
 
   if (currentScreen.equals("conectar")) drawLoginScreen();
   else if (currentScreen.equals("talleres")) drawWorkshopsScreen();
+  else if (currentScreen.equals("lectura")) drawLecturaScreen();
   else if (currentScreen.equals("quiz")) drawQuizScreen();
   else if (currentScreen.equals("resultados")) drawResultsScreen();
 
@@ -129,6 +133,9 @@ void layout() {
 
   // Results button
   setBtn(btnBackToWorkshops, width * 0.04, bby, constrain(width * 0.25, 150, 220), bbh);
+
+  // Reading screen button (más ancho para "Comenzar Evaluación")
+  setBtn(btnStartQuiz, width * 0.04 + constrain(width * 0.25, 150, 220) + 15, bby, constrain(width * 0.25, 160, 220), bbh);
 
   textSize(fs);
 }
@@ -225,6 +232,140 @@ void drawWorkshopsScreen() {
   if (wsScrollOffset + visibleCount < workshopTitles.size()) {
     fill(100); textAlign(CENTER, BOTTOM); textSize(arrSize); text("\u25BC", width/2, height - 5);
   }
+}
+
+// ===== READING SCREEN (LECTURA) =====
+
+void drawLecturaScreen() {
+  // Header con título y botón volver
+  fill(60); noStroke(); rect(0, 0, width, 50);
+  float titleSize = constrain(width * 0.022, 15, 20);
+  fill(255); textAlign(LEFT, CENTER); textSize(titleSize);
+  text(currentWorkshopTitle, 20, 25);
+  // Botón "Volver" en el extremo derecho del header
+  float backH = 30;
+  float backW = 100;
+  fill(80, 130, 180); stroke(60, 100, 150);
+  rect(width - backW - 10, 10, backW, backH, 4);
+  fill(255); textAlign(CENTER, CENTER); textSize(13);
+  text("← Volver", width - backW - 10 + backW/2, 10 + backH/2);
+  textAlign(RIGHT, CENTER);
+  textSize(titleSize * 0.8);
+  text("Lectura", width - backW - 30, 25);
+
+  // Área de contenido con tipografía grande y legible
+  float padX = width * 0.06;
+  float padY = 70;
+  float contentW = width - padX * 2;
+  float contentH = height - padY - 80;
+
+  // Fondo blanco para el contenido
+  fill(255);
+  stroke(200);
+  rect(padX - 5, padY - 5, contentW + 10, contentH + 10, 8);
+
+  // Tipografía grande para lectura (mínimo 16px, escala con pantalla)
+  float readingSize = constrain(width * 0.022, 16, 28);
+  textSize(readingSize);
+  textAlign(LEFT, TOP);
+  fill(30);
+
+  // Si no hay contenido, mostrar mensaje
+  if (currentWorkshopContent == null || currentWorkshopContent.length() == 0) {
+    fill(150);
+    textSize(readingSize * 1.2);
+    textAlign(CENTER, CENTER);
+    text("No hay contenido de lectura\npara este taller.\n\nPresiona \"Comenzar Evaluación\"\npara ir a las preguntas.", width/2, height/2 - 40);
+    return;
+  }
+
+  // Renderizar contenido con word-wrap y scroll
+  String[] paragraphs = split(currentWorkshopContent, '\n');
+  float lineH = readingSize * 1.5;
+  float yPos = padY;
+
+  // Calcular altura total del contenido
+  float totalContentH = 0;
+  for (String para : paragraphs) {
+    if (para.trim().length() == 0) {
+      totalContentH += lineH * 0.5;  // Espacio entre párrafos
+    } else {
+      // Calcular cuántas líneas ocupa este párrafo
+      float paraW = textWidth(para);
+      int lines = max(1, ceil(paraW / contentW));
+      totalContentH += lines * lineH;
+      totalContentH += lineH * 0.3;  // Espacio entre párrafos
+    }
+  }
+
+  // Limitar scroll
+  int maxScroll = max(0, (int)((totalContentH - contentH) / lineH) + 1);
+  readingScrollOffset = constrain(readingScrollOffset, 0, maxScroll);
+
+  // Dibujar contenido visible con scroll
+  float drawY = padY;
+  int lineCount = 0;
+  int skipLines = readingScrollOffset;
+  boolean started = false;
+
+  for (String para : paragraphs) {
+    if (para.trim().length() == 0) {
+      if (started) {
+        lineCount++;
+        if (lineCount > skipLines) {
+          drawY += lineH * 0.5;
+        }
+      }
+      continue;
+    }
+    started = true;
+
+    // Dividir párrafo en líneas que quepan en contentW
+    String[] words = split(para, ' ');
+    String currentLine = "";
+    for (String w : words) {
+      String testLine = currentLine.length() == 0 ? w : currentLine + " " + w;
+      if (textWidth(testLine) > contentW && currentLine.length() > 0) {
+        lineCount++;
+        if (lineCount > skipLines && drawY + lineH <= padY + contentH) {
+          text(currentLine, padX, drawY, contentW, lineH);
+          drawY += lineH;
+        }
+        currentLine = w;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    // Última línea del párrafo
+    if (currentLine.length() > 0) {
+      lineCount++;
+      if (lineCount > skipLines && drawY + lineH <= padY + contentH) {
+        text(currentLine, padX, drawY, contentW, lineH);
+        drawY += lineH;
+      }
+    }
+    // Espacio entre párrafos
+    lineCount++;
+    if (lineCount > skipLines) {
+      drawY += lineH * 0.3;
+    }
+  }
+
+  // Indicadores de scroll
+  float arrSize = constrain(width * 0.025, 14, 22);
+  if (readingScrollOffset > 0) {
+    fill(100, 150); textAlign(CENTER, TOP); textSize(arrSize); text("\u25B2", width/2, padY - 2);
+  }
+  if (readingScrollOffset < maxScroll) {
+    fill(100, 150); textAlign(CENTER, BOTTOM); textSize(arrSize); text("\u25BC", width/2, padY + contentH - 2);
+  }
+
+  // Botón "Comenzar Evaluación" al fondo
+  float bby = height - 55;
+  btnStartQuiz.draw(color(30, 150, 50), color(50, 200, 80));
+  fill(255); textAlign(LEFT, CENTER);
+  textSize(constrain(width * 0.014, 10, 12));
+  text(currentQuiz.size() + " preguntas", btnStartQuiz.x + btnStartQuiz.w + 10, bby + btnStartQuiz.h/2);
 }
 
 // ===== QUIZ SCREEN =====
@@ -455,6 +596,7 @@ void processServerMessage(String msg) {
       for (int i = 0; i < arr.size(); i++) workshopTitles.append(arr.getString(i));
     } else if (type.equals("quiz_data")) {
       currentWorkshopTitle = json.getString("workshop", "");
+      currentWorkshopContent = json.getString("content", "");
       JSONArray qArr = json.getJSONArray("questions");
       currentQuiz.clear();
       for (int i = 0; i < qArr.size(); i++) {
@@ -470,7 +612,9 @@ void processServerMessage(String msg) {
       for (int i = 0; i < studentAnswers.length; i++) studentAnswers[i] = -1;
       currentQuestionIndex = 0;
       quizSubmitted = false;
-      currentScreen = "quiz";
+      readingScrollOffset = 0;
+      // Primero mostrar pantalla de lectura, luego el quiz
+      currentScreen = "lectura";
     } else if (type.equals("quiz_result")) {
       quizScore = json.getInt("score", 0);
       quizTotal = json.getInt("total", 0);
@@ -647,6 +791,23 @@ void mousePressed() {
       }
     }
 
+  } else if (currentScreen.equals("lectura")) {
+    // Botón "Volver" en el header
+    if (mouseX >= width - 110 && mouseX <= width - 10 && mouseY >= 10 && mouseY <= 40) {
+      currentScreen = "talleres"; requestWorkshopList(); return;
+    }
+    if (btnDisconnect.isMouseOver()) { disconnect(); return; }
+    if (btnStartQuiz.isMouseOver()) {
+      // Ir al quiz si hay preguntas
+      if (currentQuiz.size() > 0) {
+        currentScreen = "quiz";
+        currentQuestionIndex = 0;
+      } else {
+        setStatus("Este taller no tiene preguntas");
+      }
+      return;
+    }
+
   } else if (currentScreen.equals("quiz")) {
     if (currentQuiz.size() == 0) return;
     QuizQuestion q = currentQuiz.get(currentQuestionIndex);
@@ -696,6 +857,7 @@ void handleKey(TextField tf) {
 
 void mouseWheel(MouseEvent event) {
   if (currentScreen.equals("talleres")) wsScrollOffset += (int)event.getCount();
+  else if (currentScreen.equals("lectura")) readingScrollOffset += (int)event.getCount();
 }
 
 // ===== DATA =====

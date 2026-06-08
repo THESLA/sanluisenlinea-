@@ -23,10 +23,12 @@ int statusTimer = 0;
 // Workshop editing state
 int editingWorkshopIndex = -1;
 String editingTitle = "";
+String editingContent = "";   // Contenido de lectura del taller (texto de estudio)
 ArrayList<Question> editingQuestions = new ArrayList<Question>();
 String editingQuestionText = "";
 int editingCorrect = 0;
 int selectedQuestionIndex = -1;
+int contentScrollOffset = 0;  // Scroll vertical para el contenido
 
 // Historial state
 ArrayList<String> histStudentKeys = new ArrayList<String>();
@@ -44,6 +46,7 @@ Button btnGradeFilterAll, btnGradeFilterWorkshop;
 Button btnHistStudentUp, btnHistStudentDown;
 Button btnHistGradeUp, btnHistGradeDown;
 TextField tfTitle;
+TextField tfContent;       // Campo de contenido del taller (multi-línea)
 TextField[] tfOptions = new TextField[4];
 TextField tfQuestionText;
 String gradeFilterWorkshop = "";
@@ -67,7 +70,7 @@ void setup() {
   btnWorkshopListUp = new Button(590, yb, 60, 26, "Subir");
   btnWorkshopListDown = new Button(660, yb, 70, 26, "Bajar");
 
-  int qBtnY = 355;
+  int qBtnY = 375;
   btnAddQuestion = new Button(245, qBtnY, 130, 26, "+ Agregar Pregunta");
   btnRemoveQuestion = new Button(385, qBtnY, 100, 26, "- Quitar");
   btnMoveQuestionUp = new Button(495, qBtnY, 60, 26, "Subir");
@@ -83,6 +86,7 @@ void setup() {
   btnHistGradeDown = new Button(570, 90, 70, 22, "Bajar");
 
   tfTitle = new TextField(245, 172, 400, 24);
+  tfContent = new TextField(245, 220, 400, 75);  // Campo multi-línea para contenido
   tfQuestionText = new TextField(245, 400, 400, 24);
   for (int i = 0; i < 4; i++) {
     tfOptions[i] = new TextField(260, 455 + i * 26, 370, 22);
@@ -169,12 +173,74 @@ void drawTalleresTab() {
   text("Título:", x2 + 5, y2 + 25);
   tfTitle.draw();
 
+  // === CONTENIDO DE LECTURA ===
+  textSize(12);
+  fill(50);
+  text("Contenido del taller (texto de estudio):", x2 + 5, 198);
+  fill(250);
+  stroke(200);
+  rect(x2 + 5, 208, ew - 10, 55);
+  fill(30);
+  textSize(11);
+
+  // Mostrar contenido con scroll si es necesario
+  float contentW = ew - 20;
+  float contentH = 45;
+  textAlign(LEFT, TOP);
+  String contentDisplay = editingContent;
+  if (contentDisplay.length() == 0) contentDisplay = "Escribe aquí el contenido del taller...";
+  fill(editingContent.length() == 0 ? color(160) : 30);
+
+  // Renderizar contenido con word-wrap
+  float lineH = 13;
+  int maxLines = (int)(contentH / lineH);
+  // Simple word wrap: split by words
+  String[] words = split(contentDisplay, ' ');
+  String wrapped = "";
+  String currentLine = "";
+  int linesOut = 0;
+  int charsToShow = contentDisplay.length();
+
+  // Mostrar texto visible según scroll
+  int totalHeight = 0;
+  String displayText = contentDisplay;
+  // Calcular aprox cuantas líneas podemos mostrar
+  int shown = 0;
+  int maxChars = contentDisplay.length();
+  // Recortar por scroll
+  int startChar = 0;
+  int curChar = 0;
+  int lineCount = 0;
+  int skipLines = contentScrollOffset;
+  String renderStr = "";
+
+  for (int ci = 0; ci <= contentDisplay.length(); ci++) {
+    char ch = ci < contentDisplay.length() ? contentDisplay.charAt(ci) : ' ';
+    if (ch == '\n' || ci == contentDisplay.length()) {
+      lineCount++;
+      if (lineCount > skipLines && skipLines + (int)(contentH / lineH) >= lineCount) {
+        String line = contentDisplay.substring(startChar, ci);
+        text(line, x2 + 8, 210 + (lineCount - skipLines - 1) * lineH);
+      }
+      startChar = ci + 1;
+    }
+  }
+
+  // Línea de cursor si está enfocado
+  if (tfContent.isFocused && frameCount / 15 % 2 == 0) {
+    fill(50, 150, 255);
+    float cx = x2 + 8 + textWidth(contentDisplay.substring(max(0, contentDisplay.length() - 1)));
+    float cy = 210 + ((lineCount - skipLines) * lineH);
+    rect(cx, cy, 8, lineH - 2);
+  }
+
+  // === PREGUNTAS ===
   fill(50);
   textSize(12);
-  text("Preguntas (" + editingQuestions.size() + "):", x2 + 5, 210);
+  text("Preguntas (" + editingQuestions.size() + "):", x2 + 5, 270);
 
-  int qy = 225;
-  int qh = 125;
+  int qy = 285;
+  int qh = 80;
   fill(250);
   stroke(210);
   rect(x2 + 5, qy, ew - 10, qh);
@@ -197,7 +263,7 @@ void drawTalleresTab() {
     text(qLabel, x2 + 12, iy + 13);
   }
 
-  int qeY = 390;
+  int qeY = 410;
   fill(50);
   textSize(12);
   text("Texto de la pregunta:", x2 + 5, qeY);
@@ -603,6 +669,7 @@ void processMessage(Client c, String msg) {
         JSONObject response = new JSONObject();
         response.setString("type", "quiz_data");
         response.setString("workshop", ws.title);
+        response.setString("content", ws.content);  // Contenido de estudio
         response.setJSONArray("questions", qArr);
         c.write(response.toString() + "\n");
       }
@@ -680,6 +747,7 @@ void sendWorkshopToAll(int workshopIndex) {
   JSONObject msg = new JSONObject();
   msg.setString("type", "quiz_data");
   msg.setString("workshop", ws.title);
+  msg.setString("content", ws.content);  // Contenido de estudio
   msg.setJSONArray("questions", qArr);
   String msgStr = msg.toString() + "\n";
 
@@ -707,6 +775,7 @@ void loadWorkshops() {
         JSONObject wObj = arr.getJSONObject(i);
         Workshop w = new Workshop();
         w.title = wObj.getString("title");
+        w.content = wObj.getString("content", "");  // Cargar contenido
         JSONArray qArr = wObj.getJSONArray("questions");
         for (int j = 0; j < qArr.size(); j++) {
           JSONObject qObj = qArr.getJSONObject(j);
@@ -732,6 +801,7 @@ void saveWorkshopsToFile() {
     Workshop w = workshops.get(i);
     JSONObject wObj = new JSONObject();
     wObj.setString("title", w.title);
+    wObj.setString("content", w.content);  // Guardar contenido
     JSONArray qArr = new JSONArray();
     for (int j = 0; j < w.questions.size(); j++) {
       Question q = w.questions.get(j);
@@ -851,7 +921,16 @@ void handleTalleresMouse() {
     }
   }
 
-  int qy = 225, qh = 125;
+  // Click en área de contenido para enfocar el TextField
+  if (mouseX >= 245 && mouseX <= 645 && mouseY >= 208 && mouseY <= 263) {
+    tfContent.isFocused = true;
+    tfTitle.isFocused = false;
+    tfQuestionText.isFocused = false;
+    for (int i = 0; i < 4; i++) tfOptions[i].isFocused = false;
+    return;
+  }
+
+  int qy = 285, qh = 80;
   int qVisible = qh / 28;
   for (int i = questionScrollOffset; i < editingQuestions.size() && i < questionScrollOffset + qVisible; i++) {
     int iy = qy + (i - questionScrollOffset) * 28;
@@ -946,7 +1025,10 @@ void mouseWheel(MouseEvent event) {
   if (currentTab.equals("talleres")) {
     if (mouseX >= 12 && mouseX <= 232) {
       scrollOffset += (int)e;
-    } else if (mouseX >= 245 && mouseX <= 665 && mouseY >= 225 && mouseY <= 350) {
+    } else if (mouseX >= 245 && mouseX <= 665 && mouseY >= 208 && mouseY <= 263) {
+      // Scroll del contenido de lectura
+      contentScrollOffset = max(0, contentScrollOffset + (int)e);
+    } else if (mouseX >= 245 && mouseX <= 665 && mouseY >= 285 && mouseY <= 365) {
       questionScrollOffset += (int)e;
     }
   } else if (currentTab.equals("historial")) {
@@ -965,6 +1047,18 @@ void keyPressed() {
     if (key == BACKSPACE && tfTitle.text.length() > 0) tfTitle.text = tfTitle.text.substring(0, tfTitle.text.length() - 1);
     else if (key != BACKSPACE && key != TAB && key != ENTER && key != RETURN && key != CODED) tfTitle.text += key;
     editingTitle = tfTitle.text;
+    return;
+  }
+  if (tfContent.isFocused) {
+    // Contenido multi-línea: Enter agrega salto de línea
+    if (key == BACKSPACE && tfContent.text.length() > 0) {
+      tfContent.text = tfContent.text.substring(0, tfContent.text.length() - 1);
+    } else if (key == ENTER || key == RETURN) {
+      tfContent.text += '\n';
+    } else if (key != BACKSPACE && key != TAB && key != ENTER && key != RETURN && key != CODED) {
+      tfContent.text += key;
+    }
+    editingContent = tfContent.text;
     return;
   }
   if (tfQuestionText.isFocused) {
@@ -991,7 +1085,9 @@ void selectWorkshop(int index) {
   editingWorkshopIndex = index;
   Workshop w = workshops.get(index);
   editingTitle = w.title;
+  editingContent = w.content;
   tfTitle.text = w.title;
+  tfContent.text = w.content;
   editingQuestions = new ArrayList<Question>();
   for (Question q : w.questions) {
     Question copy = new Question();
@@ -1003,23 +1099,28 @@ void selectWorkshop(int index) {
   editingCorrect = 0;
   tfQuestionText.text = "";
   for (int i = 0; i < 4; i++) tfOptions[i].text = "";
+  contentScrollOffset = 0;
 }
 
 void newWorkshop() {
   editingWorkshopIndex = -1;
   selectedWorkshopIndex = -1;
   editingTitle = "Nuevo Taller";
+  editingContent = "";
   tfTitle.text = "Nuevo Taller";
+  tfContent.text = "";
   editingQuestions = new ArrayList<Question>();
   selectedQuestionIndex = -1;
   editingCorrect = 0;
   tfQuestionText.text = "";
   for (int i = 0; i < 4; i++) tfOptions[i].text = "";
+  contentScrollOffset = 0;
 }
 
 void saveCurrentWorkshop() {
   Workshop w = new Workshop();
   w.title = editingTitle;
+  w.content = editingContent;
   w.questions = new ArrayList<Question>();
   for (Question q : editingQuestions) {
     Question copy = new Question();
@@ -1034,7 +1135,7 @@ void saveCurrentWorkshop() {
     selectedWorkshopIndex = editingWorkshopIndex;
   }
   saveWorkshopsToFile();
-  setStatus("Taller '" + editingTitle + "' guardado");
+  setStatus("Taller '" + editingTitle + "' guardado (" + w.questions.size() + " preguntas)");
 }
 
 void deleteCurrentWorkshop() {
@@ -1105,6 +1206,7 @@ class Question {
 
 class Workshop {
   String title;
+  String content = "";  // Texto de estudio/lectura del taller
   ArrayList<Question> questions = new ArrayList<Question>();
 }
 
