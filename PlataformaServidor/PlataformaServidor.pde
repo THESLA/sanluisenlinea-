@@ -938,9 +938,10 @@ void setStatus(String msg) {
 // ===== MOUSE =====
 
 void mousePressed() {
+  String[] tabLabels = { "talleres", "estudiantes", "notas", "historial" };
   for (int i = 0; i < tabButtons.length; i++) {
     if (tabButtons[i].isMouseOver()) {
-      currentTab = tabButtons[i].label.toLowerCase().replace(" ", "");
+      currentTab = tabLabels[i];
       return;
     }
   }
