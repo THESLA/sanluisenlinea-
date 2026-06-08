@@ -156,8 +156,8 @@ void layout() {
   float btnY = campoY + gap * 3 + 22;
   setBtn(btnConnect, cx - btnW/2, btnY, btnW, 40);
 
-  // Workshop screen
-  setBtn(btnDisconnect, width - 150, 12, 130, 30);
+  // Workshop screen (se sobrescribe en drawWorkshopsScreen con posición real)
+  setBtn(btnDisconnect, width - 102, 13, 88, 30);
 
   // Quiz bottom buttons — mínimo más amplio para que el texto no se monte
   float bby = height - 55;
@@ -310,19 +310,66 @@ void drawWorkshopsScreen() {
   fill(255); textAlign(LEFT, CENTER); textSize(titleSize);
   text("Talleres Disponibles", 22, 28);
 
-  // Info del alumno a la derecha
+  // Info del alumno a la derecha (desplazado a la izquierda para no chocar con botón Salir)
   textSize(titleSize * 0.65);
   fill(255, 220);
   textAlign(RIGHT, CENTER);
-  text(studentGrado + " · #" + studentNumero + " · " + studentNombre, width - 160, 18);
+  text(studentGrado + " · #" + studentNumero + " · " + studentNombre, width - 120, 18);
   textSize(11);
   fill(255, 160);
-  text("Conectado", width - 160, 40);
+  text("Conectado", width - 120, 40);
+ 
+  // Botón desconectar (dibujado manualmente para mejor control visual)
+  float btnDiscW = 88;
+  float btnDiscH = 30;
+  float btnDiscX = width - btnDiscW - 14;
+  float btnDiscY = 13;
+  boolean sobreBtn = mouseX >= btnDiscX && mouseX <= btnDiscX + btnDiscW && mouseY >= btnDiscY && mouseY <= btnDiscY + btnDiscH;
+  float radius = btnDiscH / 2;
 
-  // Botón desconectar (redondo, pequeño)
-  setBtn(btnDisconnect, width - 48, 14, 34, 28);
-  btnDisconnect.cornerRadius = 14;
-  btnDisconnect.draw(color(200, 60, 60), color(220, 40, 40));
+  // Sombra
+  noStroke();
+  fill(0, 0, 0, 25);
+  rect(btnDiscX + 1, btnDiscY + 2, btnDiscW, btnDiscH, radius);
+
+  // Cuerpo del botón
+  fill(sobreBtn ? color(210, 40, 30) : color(180, 55, 45));
+  noStroke();
+  rect(btnDiscX, btnDiscY, btnDiscW, btnDiscH, radius);
+
+  // Borde blanco semitransparente para destacar sobre el header azul
+  noFill();
+  stroke(255, 255, 255, 80);
+  strokeWeight(1.5);
+  rect(btnDiscX, btnDiscY, btnDiscW, btnDiscH, radius);
+
+  // Brillo superior al hacer hover
+  if (sobreBtn) {
+    fill(255, 255, 255, 25);
+    noStroke();
+    rect(btnDiscX, btnDiscY, btnDiscW, btnDiscH/2, radius);
+  }
+
+  // Icono de power dibujado con primitivas (círculo + línea vertical)
+  float iconCX = btnDiscX + 20;
+  float iconCY = btnDiscY + btnDiscH/2;
+  float iconR = 7;
+  noFill();
+  stroke(255);
+  strokeWeight(2);
+  // Círculo con abertura en la parte superior (gap de ~30° en la parte de arriba)
+  arc(iconCX, iconCY, iconR * 2, iconR * 2, radians(25), radians(335));
+  // Línea vertical hacia abajo
+  line(iconCX, iconCY + 1, iconCX, iconCY + iconR + 3);
+
+  // Texto "Salir"
+  fill(255);
+  textAlign(LEFT, CENTER);
+  textSize(13);
+  text("Salir", btnDiscX + 34, btnDiscY + btnDiscH/2);
+
+  // Guardar posición para mousePressed
+  setBtn(btnDisconnect, btnDiscX, btnDiscY, btnDiscW, btnDiscH);
 
   // Lista de talleres como cards
   float pad = width * 0.05;
@@ -1191,7 +1238,6 @@ void mousePressed() {
     if (mouseX >= width - 110 && mouseX <= width - 10 && mouseY >= 10 && mouseY <= 40) {
       currentScreen = "talleres"; requestWorkshopList(); return;
     }
-    if (btnDisconnect.isMouseOver()) { disconnect(); return; }
     // Botones de scroll Subir/Bajar
     if (mouseX >= scrollBtnUpX && mouseX <= scrollBtnUpX + scrollBtnSize_ && mouseY >= scrollBtnUpY_ && mouseY <= scrollBtnUpY_ + scrollBtnSize_) {
       readingScrollOffset = max(0, readingScrollOffset - 3); return;
