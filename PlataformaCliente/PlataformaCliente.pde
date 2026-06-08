@@ -130,31 +130,9 @@ void layout() {
   float cx = width / 2;
   float fs = width < 600 ? 11 : 13;
 
-  // Login screen positions (tarjeta blanca centrada)
-  float tarjetaW = constrain(width * 0.5, 280, 420);
-  float tarjetaX = cx - tarjetaW / 2;
-  float tarjetaY = height * 0.15;
-  float campoW = tarjetaW - 60;
-  float campoH = 32;
-  float gap = campoH + 14;
-  float lx = tarjetaX + 30;
-
-  float formY = tarjetaY + 90;
-  setTF(tfServerIP, lx, formY + 16, campoW * 0.55, campoH);
-  setTF(tfPort, lx + campoW * 0.6, formY + 16, campoW * 0.35, campoH);
-
-  // Separador visual
-  float sepY = formY + gap;
-  float alumnoY = sepY + 16;
-  float campoY = alumnoY + 22;
-  setTF(tfGrado, lx, campoY + 14, campoW, campoH);
-  setTF(tfNumero, lx, campoY + gap + 14, campoW, campoH);
-  setTF(tfNombre, lx, campoY + gap * 2 + 14, campoW, campoH);
-
-  // Botón conectar (se reposiciona en drawLoginScreen)
-  float btnW = constrain(width * 0.3, 160, 240);
-  float btnY = campoY + gap * 3 + 22;
-  setBtn(btnConnect, cx - btnW/2, btnY, btnW, 40);
+  // Los campos de login (tfServerIP, tfPort, tfGrado, tfNumero, tfNombre)
+  // y btnConnect se posicionan en drawLoginScreen() con espaciado generoso.
+  // Aquí solo posicionamos los elementos que usan otras pantallas.
 
   // Workshop screen (se sobrescribe en drawWorkshopsScreen con posición real)
   setBtn(btnDisconnect, width - 102, 13, 88, 30);
@@ -184,42 +162,37 @@ void setBtn(Button b, float x, float y, float w, float h) {
 }
 
 // ===== LOGIN SCREEN =====
-// Fondo azul sólido con tarjeta blanca centrada, dos secciones claras y espaciadas
+// Fondo azul sólido, tarjeta blanca centrada, campos bien espaciados
 
 void drawLoginScreen() {
   float cx = width / 2;
-  float tarjetaW = constrain(width * 0.5, 300, 440);
+  float tarjetaW = constrain(width * 0.5, 320, 440);
   float tarjetaX = cx - tarjetaW / 2;
-  float tarjetaY = height * 0.13;
+  float tarjetaY = height * 0.12;
 
-  // Calcular altura dinámica según el contenido expandido
-  float gapGrande = 18;          // Espacio entre campos
-  float gapSeccion = 22;         // Espacio entre secciones
+  // Espaciado generoso entre cada campo
   float campoH = 34;
-  float campoW = tarjetaW - 72;
-  float lx = tarjetaX + 36;
+  float gapEntreCampos = 36;    // Espacio entre el borde inferior de un campo y el borde superior del siguiente
+  float campoW = tarjetaW - 64;
+  float lx = tarjetaX + 32;
+  float labelSize = constrain(width * 0.015, 12, 14);
 
-  // Altura de cada sección
-  float seccionServidorH = 22 + 20 + campoH + gapSeccion + 14;
-  float seccionAlumnoH = 22 + 20 + campoH * 3 + gapGrande * 2 + gapSeccion;
-  float botonH = 44;
-  float tarjetaH = seccionServidorH + seccionAlumnoH + botonH + 60; // padding extra
+  // Altura total: título + línea + servidor + gap + alumno ×3 + botón + padding
+  float tarjetaH = 80 + 20 + 60 + campoH + gapEntreCampos + 60 + campoH * 3 + gapEntreCampos * 2 + 44 + 40;
 
   // Icono de graduación (birrete)
-  float iconSize = 44;
-  float iconY = tarjetaY - 36;
   noStroke();
   fill(255);
-  drawIconGraduation(cx, iconY, iconSize);
+  drawIconGraduation(cx, tarjetaY - 36, 44);
 
-  // Tarjeta blanca con bordes redondeados
+  // Tarjeta blanca
   noStroke();
   fill(0, 0, 0, 30);
   rect(tarjetaX + 3, tarjetaY + 5, tarjetaW, tarjetaH, 20);
   fill(BLANCO_TARJETA);
   rect(tarjetaX, tarjetaY, tarjetaW, tarjetaH, 20);
 
-  // Título dentro de la tarjeta
+  // Título
   fill(AZUL_ACCENTO);
   textAlign(CENTER, TOP);
   float tituloSize = constrain(width * 0.028, 18, 26);
@@ -229,86 +202,69 @@ void drawLoginScreen() {
   fill(TEXTO_SUAVE);
   text("Alumno", cx, tarjetaY + 52);
 
-  // Línea divisoria principal
+  // Línea divisoria
+  float divY = tarjetaY + 80;
   stroke(CREMA_FONDO);
   strokeWeight(1);
-  float divY = tarjetaY + 78;
   line(tarjetaX + 30, divY, tarjetaX + tarjetaW - 30, divY);
 
   // ===== SECCIÓN SERVIDOR =====
-  float sec1Y = divY + 16;
-  float sec1H = 22 + 20 + campoH + 12;
-
-  // Fondo sutil de sección
-  fill(248, 246, 242);
-  noStroke();
-  rect(tarjetaX + 18, sec1Y, tarjetaW - 36, sec1H, 10);
-
-  // Etiqueta de sección
+  float secY = divY + 18;
   fill(AZUL_ACCENTO);
   textAlign(LEFT, TOP);
-  float labelSize = constrain(width * 0.015, 11, 13);
-  textSize(labelSize * 1.05);
-  fill(TEXTO_OSCURO);
-  text("Servidor", lx, sec1Y + 12);
+  textSize(labelSize);
+  text("Servidor", lx, secY);
 
-  // IP y Puerto en la misma fila pero con más espacio
+  // IP y Puerto en la misma fila
   float ipW = campoW * 0.55;
   float portW = campoW * 0.35;
-  float portX = lx + ipW + 14;
-  float campoSY = sec1Y + 32;
+  float portX = lx + ipW + 16;
+  float fy = secY + 22;
 
-  textSize(labelSize);
   fill(TEXTO_SUAVE);
-  text("Dirección IP", lx, campoSY - 14);
+  textSize(labelSize - 1);
+  text("Dirección IP", lx, fy - 14);
   tfServerIP.setPlaceholder("127.0.0.1");
-  setTF(tfServerIP, lx, campoSY, ipW, campoH);
+  setTF(tfServerIP, lx, fy, ipW, campoH);
   tfServerIP.draw();
 
-  text("Puerto", portX, campoSY - 14);
+  fill(TEXTO_SUAVE);
+  text("Puerto", portX, fy - 14);
   tfPort.setPlaceholder("5204");
-  setTF(tfPort, portX, campoSY, portW, campoH);
+  setTF(tfPort, portX, fy, portW, campoH);
   tfPort.draw();
 
-  // ===== SEPARADOR ENTRE SECCIONES =====
-  float sec2Y = sec1Y + sec1H + gapSeccion;
-
-  // ===== SECCIÓN DATOS DEL ALUMNO =====
-  float sec2H = 22 + 20 + campoH * 3 + gapGrande * 2 + 12;
-
-  fill(248, 246, 242);
-  noStroke();
-  rect(tarjetaX + 18, sec2Y, tarjetaW - 36, sec2H, 10);
-
-  fill(TEXTO_OSCURO);
-  textAlign(LEFT, TOP);
-  textSize(labelSize * 1.05);
-  text("Datos del Alumno", lx, sec2Y + 12);
-
-  float campoSY2 = sec2Y + 32;
-  float gap2 = campoH + gapGrande;
-
+  // ===== DATOS DEL ALUMNO =====
+  float sec2Y = fy + campoH + gapEntreCampos + 8;
+  fill(AZUL_ACCENTO);
   textSize(labelSize);
+  textAlign(LEFT, TOP);
+  text("Datos del Alumno", lx, sec2Y);
+
+  float fy2 = sec2Y + 22;
   fill(TEXTO_SUAVE);
-  text("Grado / Sección", lx, campoSY2 - 14);
+  textSize(labelSize - 1);
+  text("Grado / Sección", lx, fy2 - 14);
   tfGrado.setPlaceholder("Ej: 5A");
-  setTF(tfGrado, lx, campoSY2, campoW, campoH);
+  setTF(tfGrado, lx, fy2, campoW, campoH);
   tfGrado.draw();
 
-  text("Número en lista", lx, campoSY2 + gap2 - 14);
+  fill(TEXTO_SUAVE);
+  text("Número en lista", lx, fy2 + gapEntreCampos - 14);
   tfNumero.setPlaceholder("Ej: 12");
-  setTF(tfNumero, lx, campoSY2 + gap2, campoW, campoH);
+  setTF(tfNumero, lx, fy2 + gapEntreCampos, campoW, campoH);
   tfNumero.draw();
 
-  text("Primer nombre", lx, campoSY2 + gap2 * 2 - 14);
+  fill(TEXTO_SUAVE);
+  text("Primer nombre", lx, fy2 + gapEntreCampos * 2 - 14);
   tfNombre.setPlaceholder("Ej: Juan");
-  setTF(tfNombre, lx, campoSY2 + gap2 * 2, campoW, campoH);
+  setTF(tfNombre, lx, fy2 + gapEntreCampos * 2, campoW, campoH);
   tfNombre.draw();
 
-  // ===== BOTÓN CONECTAR =====
-  float btnY = sec2Y + sec2H + 22;
-  float btnW = constrain(width * 0.3, 160, 240);
-  setBtn(btnConnect, cx - btnW/2, btnY, btnW, 40);
+  // Botón conectar
+  float btnY = fy2 + gapEntreCampos * 2 + campoH + 24;
+  float btnW = constrain(width * 0.3, 170, 240);
+  setBtn(btnConnect, cx - btnW/2, btnY, btnW, 42);
   btnConnect.draw(AZUL_ACCENTO, AZUL_OSCURO);
 }
 
