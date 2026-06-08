@@ -95,6 +95,10 @@ void setup() {
   server = new Server(this, PORT);
   loadWorkshops();
   loadGrades();
+  println("[Servidor] Talleres cargados: " + workshops.size());
+  for (int i = 0; i < workshops.size(); i++) {
+    println("  - " + workshops.get(i).title + " (" + workshops.get(i).questions.size() + " preguntas, " + workshops.get(i).content.length() + " caracteres)");
+  }
   setStatus("Servidor iniciado en puerto " + PORT);
 }
 
@@ -644,10 +648,12 @@ void processMessage(Client c, String msg) {
       JSONArray wList = new JSONArray();
       JSONArray cList = new JSONArray();
       JSONArray qCountList = new JSONArray();
+      println("[Servidor] Enviando " + workshops.size() + " talleres a " + nombre);
       for (int i = 0; i < workshops.size(); i++) {
         wList.setString(i, workshops.get(i).title);
         cList.setString(i, workshops.get(i).content);
         qCountList.setInt(i, workshops.get(i).questions.size());
+        println("  -> " + workshops.get(i).title);
       }
       JSONObject wsMsg = new JSONObject();
       wsMsg.setString("type", "workshop_list");
@@ -655,6 +661,7 @@ void processMessage(Client c, String msg) {
       wsMsg.setJSONArray("contents", cList);
       wsMsg.setJSONArray("questionCounts", qCountList);
       c.write(wsMsg.toString() + "\n");
+      println("[Servidor] workshop_list enviado");
 
     } else if (type.equals("list_workshops")) {
       JSONArray wList = new JSONArray();

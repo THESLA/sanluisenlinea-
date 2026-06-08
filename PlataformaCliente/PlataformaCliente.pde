@@ -767,6 +767,7 @@ void connectToServer() {
       isConnected = true;
       currentScreen = "talleres";
       setStatus("Conectado al servidor");
+      println("[Cliente] Socket conectado, enviando connect...");
 
       JSONObject msg = new JSONObject();
       msg.setString("type", "connect");
@@ -775,12 +776,14 @@ void connectToServer() {
       msg.setInt("numero", nro);
       sendMessage(msg);
 
-      delay(200);
+      delay(100);
       JSONObject req = new JSONObject();
       req.setString("type", "list_workshops");
       sendMessage(req);
+      println("[Cliente] list_workshops enviado");
     } else {
       setStatus("No se pudo conectar al servidor");
+      println("[Cliente] ERROR: No se pudo conectar al servidor");
     }
   } catch (Exception e) {
     setStatus("Error: " + e.getMessage());
@@ -802,13 +805,17 @@ void disconnect() {
 
 void handleNetwork() {
   if (client == null || !client.active()) {
+    if (isConnected) println("[Cliente] Conexión perdida");
     isConnected = false;
     return;
   }
   String msg = client.readStringUntil('\n');
   if (msg != null) {
     msg = msg.trim();
-    if (msg.length() > 0) processServerMessage(msg);
+    if (msg.length() > 0) {
+      println("[Cliente] Mensaje recibido: " + msg.substring(0, min(80, msg.length())) + "...");
+      processServerMessage(msg);
+    }
   }
 }
 
@@ -870,11 +877,15 @@ void processServerMessage(String msg) {
       JSONArray titles = json.getJSONArray("workshops");
       JSONArray contents = json.getJSONArray("contents");
       JSONArray qCounts = json.getJSONArray("questionCounts");
+      println("[Cliente] Recibidos " + titles.size() + " talleres:");
       for (int i = 0; i < titles.size(); i++) {
         workshopTitles.append(titles.getString(i));
         workshopContents.append(contents.getString(i));
-        workshopQuestionCounts.append(qCounts.getInt(i));
+        int qc = qCounts.getInt(i);
+        workshopQuestionCounts.append(qc);
+        println("  -> " + titles.getString(i) + " (" + qc + " preguntas, " + contents.getString(i).length() + " chars)");
       }
+      println("[Cliente] workshopTitles size: " + workshopTitles.size());
     } else if (type.equals("quiz_data")) {
       currentWorkshopTitle = json.getString("workshop", "");
       currentWorkshopContent = json.getString("content", "");
