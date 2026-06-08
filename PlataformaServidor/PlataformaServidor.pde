@@ -60,29 +60,9 @@ TextField tfQuestionText;
 String gradeFilterWorkshop = "";
 int selectedWorkshopIndex = -1;
 
-// ===== SVG ICONS =====
-PShape iconBook, iconGraduation, iconCheck, iconCross, iconUsers, iconStar, iconClock;
-PShape iconEdit, iconPlus, iconTrash, iconHelpCircle, iconArrowLeft, iconCheckCircle, iconXCircle;
-
 void setup() {
-  size(960, 650, P2D); // P2D necesario para cargar SVG con loadShape()
+  size(960, 650);
   surface.setTitle("Plataforma Educativa - Servidor");
-
-  // Cargar iconos SVG estilo Simple Icons
-  iconBook        = loadShape("icons/book.svg");
-  iconGraduation  = loadShape("icons/graduation.svg");
-  iconCheck       = loadShape("icons/check.svg");
-  iconCross       = loadShape("icons/cross.svg");
-  iconUsers       = loadShape("icons/users.svg");
-  iconStar        = loadShape("icons/star.svg");
-  iconClock       = loadShape("icons/clock.svg");
-  iconEdit        = loadShape("icons/edit.svg");
-  iconPlus        = loadShape("icons/plus.svg");
-  iconTrash       = loadShape("icons/trash.svg");
-  iconHelpCircle  = loadShape("icons/help-circle.svg");
-  iconArrowLeft   = loadShape("icons/arrow-left.svg");
-  iconCheckCircle = loadShape("icons/check-circle.svg");
-  iconXCircle     = loadShape("icons/x-circle.svg");
 
   tabButtons = new Button[4];
   tabButtons[0] = new Button(10, 10, 110, 32, "");
@@ -147,19 +127,22 @@ void drawTabs() {
   fill(AZUL_ACCENTO);
   rect(0, 0, width, 50);
 
-  // Iconos SVG para cada tab
-  PShape[] tabIcons = { iconBook, iconUsers, iconStar, iconClock };
   String[] tabLabels = { "Talleres", "Estudiantes", "Notas", "Historial" };
 
   for (int i = 0; i < tabButtons.length; i++) {
     boolean isActive = currentTab.equals(tabLabels[i].toLowerCase());
     tabButtons[i].draw(isActive ? AZUL_OSCURO : color(255, 255, 255, 30), isActive ? color(20, 80, 140) : color(255, 255, 255, 60));
 
-    // Icono SVG antes del texto
-    shapeMode(CENTER);
+    // Icono programático antes del texto
     fill(255);
     noStroke();
-    shape(tabIcons[i], tabButtons[i].x + 16, tabButtons[i].y + tabButtons[i].h/2, 16, 16);
+    // Ícono según el tab
+    float ix = tabButtons[i].x + 16;
+    float iy = tabButtons[i].y + tabButtons[i].h/2;
+    if (i == 0) drawIconBook(ix, iy, 14);
+    else if (i == 1) drawIconUsers(ix, iy, 14);
+    else if (i == 2) drawIconStar(ix, iy, 14);
+    else if (i == 3) drawIconClock(ix, iy, 14);
 
     // Texto del tab (desplazado para dejar espacio al icono)
     fill(255);
@@ -184,10 +167,9 @@ void drawTalleresTab() {
   stroke(GRIS_BORDE);
   rect(x1, y1, w1, height - y1 - 30, 6);
 
-  // Icono SVG de libro junto al título
-  shapeMode(CENTER);
+  // Icono de libro junto al título
   fill(AZUL_ACCENTO);
-  shape(iconBook, x1 + 18, y1 + 10, 16, 16);
+  drawIconBook(x1 + 18, y1 + 10, 16);
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(13);
@@ -215,9 +197,8 @@ void drawTalleresTab() {
   stroke(GRIS_BORDE);
   rect(x2, y2, ew, eh, 6);
 
-  shapeMode(CENTER);
   fill(AZUL_OSCURO);
-  shape(iconEdit, x2 + 14, y2 + 9, 14, 14);
+  drawIconEdit(x2 + 14, y2 + 9, 14);
   fill(AZUL_OSCURO);
   textAlign(LEFT, TOP);
   textSize(13);
@@ -289,9 +270,8 @@ void drawTalleresTab() {
   }
 
   // === PREGUNTAS ===
-  shapeMode(CENTER);
   fill(AZUL_ACCENTO);
-  shape(iconHelpCircle, x2 + 14, 278, 14, 14);
+  drawIconHelpCircle(x2 + 14, 278, 14);
   fill(TEXTO_OSCURO);
   textSize(12);
   text("Preguntas (" + editingQuestions.size() + "):", x2 + 30, 273);
@@ -359,19 +339,17 @@ void drawEstudiantesTab() {
     if (s.connected && s.client != null && s.client.active()) connectedCount++;
   }
 
-  // Icono SVG de usuarios
-  shapeMode(CENTER);
+  // Icono de usuarios
   fill(AZUL_ACCENTO);
-  shape(iconUsers, 30, 68, 18, 18);
+  drawIconUsers(30, 68, 18);
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(16);
   text("Estudiantes", 48, 63);
 
-  // Indicador de conexión con SVG check
-  shapeMode(CENTER);
+  // Indicador de conexión con check
   fill(#27AE60);
-  shape(iconCheckCircle, 24, 86, 14, 14);
+  drawIconCheckCircle(24, 86, 14);
   fill(AZUL_ACCENTO);
   textSize(13);
   text(connectedCount + " conectados", 38, 80);
@@ -441,10 +419,9 @@ void drawNotasTab() {
   stroke(GRIS_BORDE);
   rect(10, 90, width - 20, height - 105, 8);
 
-  // Icono SVG de estrella
-  shapeMode(CENTER);
+  // Icono de estrella
   fill(AZUL_ACCENTO);
-  shape(iconStar, 30, 68, 18, 18);
+  drawIconStar(30, 68, 18);
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(16);
@@ -499,10 +476,9 @@ void drawHistorialTab() {
   stroke(GRIS_BORDE);
   rect(10, 55, 300, height - 70, 8);
 
-  // Icono SVG de reloj
-  shapeMode(CENTER);
+  // Icono de reloj
   fill(AZUL_ACCENTO);
-  shape(iconClock, 30, 66, 16, 16);
+  drawIconClock(30, 66, 16);
   fill(TEXTO_OSCURO);
   textAlign(LEFT, TOP);
   textSize(14);
@@ -618,10 +594,10 @@ void drawHistorialTab() {
           fill(correct ? color(220, 255, 220) : color(255, 220, 220));
           noStroke();
           rect(332, rowY2, width - 354, 22);
-          shapeMode(CENTER);
           noStroke();
           fill(correct ? VERDE_ACIERTO : ROJO_ERROR);
-          shape(correct ? iconCheckCircle : iconXCircle, 348, rowY2 + 11, 14, 14);
+          if (correct) drawIconCheckCircle(348, rowY2 + 11, 14);
+          else drawIconXCircle(348, rowY2 + 11, 14);
           fill(correct ? color(30, 120, 30) : color(180, 30, 30));
           textSize(11);
           textAlign(LEFT, CENTER);
@@ -1283,4 +1259,129 @@ class Grade {
   int total;
   long timestamp;
   int[] answers;
+}
+
+// ===== ICON DRAWING FUNCTIONS =====
+// Íconos dibujados con primitivas Processing (sin SVG externos ni P2D)
+// Usan fill() configurado antes de llamar
+
+void drawIconGraduation(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  beginShape(TRIANGLES);
+  vertex(x, y - hs * 0.5);
+  vertex(x - hs, y + hs * 0.2);
+  vertex(x + hs, y + hs * 0.2);
+  endShape();
+  rect(x - hs * 0.05, y + hs * 0.1, hs * 0.1, hs * 0.4);
+  rect(x - hs * 0.6, y + hs * 0.1, hs * 1.2, hs * 0.12);
+}
+
+void drawIconBook(float x, float y, float s) {
+  float hs = s / 2;
+  float w = hs * 0.8;
+  float h = hs * 1.0;
+  noStroke();
+  rect(x - w, y - h/2, w, h, 2);
+  rect(x, y - h/2, w, h, 2);
+  rect(x - 1, y - h/2, 2, h);
+  stroke(255);
+  strokeWeight(0.8);
+  float px = x - w/2;
+  for (int i = 0; i < 3; i++) { float ly = y - h/3 + i * h/3; line(px - w/3, ly, px + w/3, ly); }
+  px = x + w/2;
+  for (int i = 0; i < 3; i++) { float ly = y - h/3 + i * h/3; line(px - w/3, ly, px + w/3, ly); }
+  noStroke();
+}
+
+void drawIconCheckCircle(float x, float y, float s) {
+  float r = s / 2;
+  noStroke();
+  ellipse(x, y, s, s);
+  stroke(255);
+  strokeWeight(s * 0.1);
+  noFill();
+  beginShape();
+  vertex(x - r * 0.35, y);
+  vertex(x - r * 0.1, y + r * 0.3);
+  vertex(x + r * 0.45, y - r * 0.25);
+  endShape();
+  noStroke();
+}
+
+void drawIconXCircle(float x, float y, float s) {
+  float r = s / 2;
+  noStroke();
+  ellipse(x, y, s, s);
+  stroke(255);
+  strokeWeight(s * 0.1);
+  noFill();
+  float o = r * 0.3;
+  line(x - o, y - o, x + o, y + o);
+  line(x + o, y - o, x - o, y + o);
+  noStroke();
+}
+
+void drawIconArrowLeft(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  beginShape(TRIANGLES);
+  vertex(x + hs * 0.3, y - hs * 0.5);
+  vertex(x + hs * 0.3, y + hs * 0.5);
+  vertex(x - hs * 0.4, y);
+  endShape();
+}
+
+void drawIconUsers(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  ellipse(x - hs * 0.3, y - hs * 0.4, hs * 0.35, hs * 0.35);
+  rect(x - hs * 0.5, y - hs * 0.05, hs * 0.4, hs * 0.5, 3);
+  ellipse(x + hs * 0.3, y - hs * 0.4, hs * 0.35, hs * 0.35);
+  rect(x + hs * 0.1, y - hs * 0.05, hs * 0.4, hs * 0.5, 3);
+}
+
+void drawIconStar(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  beginShape();
+  for (int i = 0; i < 10; i++) {
+    float a = i * PI / 5 - PI / 2;
+    float r = (i % 2 == 0) ? hs : hs * 0.4;
+    vertex(x + cos(a) * r, y + sin(a) * r);
+  }
+  endShape(CLOSE);
+}
+
+void drawIconClock(float x, float y, float s) {
+  float r = s / 2;
+  noStroke();
+  ellipse(x, y, s, s);
+  stroke(255);
+  strokeWeight(s * 0.06);
+  strokeCap(ROUND);
+  line(x, y, x, y - r * 0.55);
+  line(x, y, x + r * 0.4, y);
+  noStroke();
+}
+
+void drawIconEdit(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  rect(x - hs * 0.1, y - hs * 0.5, hs * 0.2, hs * 0.8);
+  beginShape(TRIANGLES);
+  vertex(x - hs * 0.2, y + hs * 0.3);
+  vertex(x + hs * 0.2, y + hs * 0.3);
+  vertex(x, y + hs * 0.6);
+  endShape();
+}
+
+void drawIconHelpCircle(float x, float y, float s) {
+  float r = s / 2;
+  noStroke();
+  ellipse(x, y, s, s);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(s * 0.7);
+  text("?", x, y);
 }

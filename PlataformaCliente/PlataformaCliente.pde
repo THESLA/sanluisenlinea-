@@ -60,12 +60,8 @@ int statusTimer = 300;
 int wsScrollOffset = 0;
 
 void settings() {
-  fullScreen(P2D); // P2D necesario para cargar SVG con loadShape()
+  fullScreen();
 }
-
-// ===== SVG ICONS =====
-PShape iconBook, iconGraduation, iconCheck, iconCross, iconUsers, iconStar, iconClock;
-PShape iconEdit, iconPlus, iconTrash, iconHelpCircle, iconArrowLeft, iconCheckCircle, iconXCircle;
 
 void setup() {
   surface.setTitle("Plataforma Educativa - Alumno");
@@ -73,22 +69,6 @@ void setup() {
   // Cargar tipografías
   fontUbuntu = createFont("Ubuntu-Regular.ttf", 14, true); // Cargar desde data/
   fontGaramond = createFont("Garamond", 24, true);// Serif para lectura de talleres
-
-  // Cargar iconos SVG estilo Simple Icons
-  iconBook        = loadShape("icons/book.svg");
-  iconGraduation  = loadShape("icons/graduation.svg");
-  iconCheck       = loadShape("icons/check.svg");
-  iconCross       = loadShape("icons/cross.svg");
-  iconUsers       = loadShape("icons/users.svg");
-  iconStar        = loadShape("icons/star.svg");
-  iconClock       = loadShape("icons/clock.svg");
-  iconEdit        = loadShape("icons/edit.svg");
-  iconPlus        = loadShape("icons/plus.svg");
-  iconTrash       = loadShape("icons/trash.svg");
-  iconHelpCircle  = loadShape("icons/help-circle.svg");
-  iconArrowLeft   = loadShape("icons/arrow-left.svg");
-  iconCheckCircle = loadShape("icons/check-circle.svg");
-  iconXCircle     = loadShape("icons/x-circle.svg");
 
   tfServerIP = new TextField(0, 0, 0, 0);
   tfServerIP.text = serverIP;
@@ -213,13 +193,12 @@ void drawLoginScreen() {
   float tarjetaX = cx - tarjetaW / 2;
   float tarjetaY = height * 0.15;
 
-  // Icono SVG de graduación (estilo Simple Icons)
+  // Icono de graduación (birrete)
   float iconSize = 44;
   float iconY = tarjetaY - 36;
-  shapeMode(CENTER);
   noStroke();
   fill(255);
-  shape(iconGraduation, cx, iconY, iconSize, iconSize);
+  drawIconGraduation(cx, iconY, iconSize);
 
   // Tarjeta blanca con bordes redondeados
   noStroke();
@@ -395,13 +374,12 @@ void drawWorkshopsScreen() {
     strokeWeight(hovered ? 2 : 1);
     rect(pad, cardY, width - pad * 2, itemH, 14);
 
-    // Icono SVG de libro (decoración)
-    shapeMode(CENTER);
+    // Icono de libro (decoración)
     noStroke();
     fill(AZUL_CLARO);
     ellipse(pad + 26, cardY + itemH/2, 28, 28);
     fill(AZUL_ACCENTO);
-    shape(iconBook, pad + 26, cardY + itemH/2, 16, 16);
+    drawIconBook(pad + 26, cardY + itemH/2, 16);
 
     // Título del taller
     fill(TEXTO_OSCURO);
@@ -414,15 +392,13 @@ void drawWorkshopsScreen() {
     fill(TEXTO_SUAVE);
     text("Toca para iniciar →", pad + 48, cardY + itemH * 0.78);
 
-    // Flecha indicadora SVG
+    // Flecha indicadora
     if (hovered) {
-      shapeMode(CENTER);
       fill(AZUL_ACCENTO);
-      pushMatrix();
-      translate(width - pad - 20, cardY + itemH/2);
-      scale(-1, 1);  // Invertir horizontalmente para que apunte a la derecha
-      shape(iconArrowLeft, 0, 0, 18, 18);
-      popMatrix();
+      noStroke();
+      textAlign(RIGHT, CENTER);
+      textSize(18);
+      text("→", width - pad - 16, cardY + itemH/2);
     }
   }
 
@@ -449,17 +425,14 @@ void drawLecturaScreen() {
   textFont(fontGaramond, titleSize);
   text(currentWorkshopTitle, 20, 28);
 
-  // Botón "Volver" estilo píldora con icono SVG
+  // Botón "Volver" estilo píldora
   float backW = 90;
   float backH = 30;
   noStroke();
   fill(255, 255, 255, 200);
   rect(width - backW - 14, 13, backW, backH, backH/2);
-  shapeMode(CENTER);
-  fill(AZUL_ACCENTO);
-  shape(iconArrowLeft, width - backW - 14 + 18, 13 + backH/2, 16, 16);
-  fill(AZUL_ACCENTO); textAlign(LEFT, CENTER); textSize(13);
-  text("Volver", width - backW - 14 + 28, 13 + backH/2);
+  fill(AZUL_ACCENTO); textAlign(CENTER, CENTER); textSize(13);
+  text("← Volver", width - backW - 14 + backW/2, 13 + backH/2);
   textAlign(RIGHT, CENTER);
   fill(255, 200);
   textSize(titleSize * 0.7);
@@ -646,14 +619,11 @@ void drawLecturaScreen() {
     fill(TEXTO_SUAVE);
     rect(btnStartQuiz.x, bby, btnStartQuiz.w, btnStartQuiz.h, btnStartQuiz.h/2);
 
-    // Icono SVG de libro + texto
-    shapeMode(CENTER);
+    // Texto "📖 Solo lectura"
     fill(BLANCO_TARJETA);
-    shape(iconBook, btnStartQuiz.x + 18, bby + btnStartQuiz.h/2, 16, 16);
-    fill(BLANCO_TARJETA);
-    textAlign(LEFT, CENTER);
+    textAlign(CENTER, CENTER);
     textSize(constrain(width * 0.016, 12, 14));
-    text("Solo lectura", btnStartQuiz.x + 30, bby + btnStartQuiz.h/2);
+    text("📖 Solo lectura", btnStartQuiz.x + btnStartQuiz.w/2, bby + btnStartQuiz.h/2);
 
     // Etiqueta informativa
     fill(TEXTO_SUAVE);
@@ -877,11 +847,11 @@ void drawResultsScreen() {
     strokeWeight(1);
     rect(width * 0.05, rowY, width * 0.9, rh, rh/2);
 
-    // Icono SVG (check o cross) + texto
-    shapeMode(CENTER);
+    // Icono de check o cross + texto
     noStroke();
     fill(correct ? VERDE_ACIERTO : ROJO_ERROR);
-    shape(correct ? iconCheckCircle : iconXCircle, width * 0.07, rowY + rh/2, 16, 16);
+    if (correct) drawIconCheckCircle(width * 0.07, rowY + rh/2, 16);
+    else drawIconXCircle(width * 0.07, rowY + rh/2, 16);
     fill(TEXTO_OSCURO);
     textAlign(LEFT, CENTER);
     textSize(constrain(width * 0.016, 11, 14));
@@ -1341,4 +1311,219 @@ void mouseReleased() {
 class QuizQuestion {
   String text;
   String[] options;
+}
+
+// ===== ICON DRAWING FUNCTIONS =====
+// Todas se dibujan con primitivas Processing (sin SVG externos ni P2D)
+// Usan color configurado con fill() antes de llamar
+
+// Graduation cap (birrete)
+void drawIconGraduation(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  // Birrete: triángulo invertido
+  beginShape(TRIANGLES);
+  vertex(x, y - hs * 0.5);
+  vertex(x - hs, y + hs * 0.2);
+  vertex(x + hs, y + hs * 0.2);
+  endShape();
+  // Borla
+  rect(x - hs * 0.05, y + hs * 0.1, hs * 0.1, hs * 0.4);
+  // Base del birrete
+  rect(x - hs * 0.6, y + hs * 0.1, hs * 1.2, hs * 0.12);
+}
+
+// Book (libro abierto)
+void drawIconBook(float x, float y, float s) {
+  float hs = s / 2;
+  float w = hs * 0.8;
+  float h = hs * 1.0;
+  noStroke();
+  // Tapa izquierda
+  rect(x - w, y - h/2, w, h, 2);
+  // Tapa derecha
+  rect(x, y - h/2, w, h, 2);
+  // Lomo
+  rect(x - 1, y - h/2, 2, h);
+  // Líneas de páginas
+  stroke(255);
+  strokeWeight(0.8);
+  float px = x - w/2;
+  for (int i = 0; i < 3; i++) {
+    float ly = y - h/3 + i * h/3;
+    line(px - w/3, ly, px + w/3, ly);
+  }
+  px = x + w/2;
+  for (int i = 0; i < 3; i++) {
+    float ly = y - h/3 + i * h/3;
+    line(px - w/3, ly, px + w/3, ly);
+  }
+  noStroke();
+}
+
+// Check-circle (círculo con check)
+void drawIconCheckCircle(float x, float y, float s) {
+  float r = s / 2;
+  noStroke();
+  ellipse(x, y, s, s);
+  stroke(255);
+  strokeWeight(s * 0.1);
+  noFill();
+  beginShape();
+  vertex(x - r * 0.35, y);
+  vertex(x - r * 0.1, y + r * 0.3);
+  vertex(x + r * 0.45, y - r * 0.25);
+  endShape();
+  noStroke();
+}
+
+// X-circle (círculo con equis)
+void drawIconXCircle(float x, float y, float s) {
+  float r = s / 2;
+  noStroke();
+  ellipse(x, y, s, s);
+  stroke(255);
+  strokeWeight(s * 0.1);
+  noFill();
+  float o = r * 0.3;
+  line(x - o, y - o, x + o, y + o);
+  line(x + o, y - o, x - o, y + o);
+  noStroke();
+}
+
+// Arrow left (chevron izquierda)
+void drawIconArrowLeft(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  beginShape(TRIANGLES);
+  vertex(x + hs * 0.3, y - hs * 0.5);
+  vertex(x + hs * 0.3, y + hs * 0.5);
+  vertex(x - hs * 0.4, y);
+  endShape();
+}
+
+// Checkmark simple
+void drawIconCheck(float x, float y, float s) {
+  noStroke();
+  strokeWeight(s * 0.15);
+  strokeCap(ROUND);
+  noFill();
+  float o = s * 0.25;
+  line(x - o, y, x, y + o * 0.7);
+  line(x, y + o * 0.7, x + o * 0.8, y - o * 0.5);
+  noStroke();
+}
+
+// Cross (X) simple
+void drawIconCross(float x, float y, float s) {
+  noStroke();
+  strokeWeight(s * 0.12);
+  strokeCap(ROUND);
+  noFill();
+  float o = s * 0.3;
+  line(x - o, y - o, x + o, y + o);
+  line(x + o, y - o, x - o, y + o);
+  noStroke();
+}
+
+// Users (silueta de dos personas)
+void drawIconUsers(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  // Persona 1 (izquierda)
+  ellipse(x - hs * 0.3, y - hs * 0.4, hs * 0.35, hs * 0.35);
+  rect(x - hs * 0.5, y - hs * 0.05, hs * 0.4, hs * 0.5, 3);
+  // Persona 2 (derecha)
+  ellipse(x + hs * 0.3, y - hs * 0.4, hs * 0.35, hs * 0.35);
+  rect(x + hs * 0.1, y - hs * 0.05, hs * 0.4, hs * 0.5, 3);
+}
+
+// Star (estrella)
+void drawIconStar(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  beginShape();
+  for (int i = 0; i < 10; i++) {
+    float angle = i * PI / 5 - PI / 2;
+    float r = (i % 2 == 0) ? hs : hs * 0.4;
+    vertex(x + cos(angle) * r, y + sin(angle) * r);
+  }
+  endShape(CLOSE);
+}
+
+// Clock (reloj)
+void drawIconClock(float x, float y, float s) {
+  float r = s / 2;
+  noStroke();
+  ellipse(x, y, s, s);
+  // Manecillas
+  stroke(255);
+  strokeWeight(s * 0.06);
+  strokeCap(ROUND);
+  float cx = x, cy = y;
+  line(cx, cy, cx, cy - r * 0.55);
+  line(cx, cy, cx + r * 0.4, cy);
+  noStroke();
+}
+
+// Pencil (editar)
+void drawIconEdit(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  // Cuerpo del lápiz
+  rect(x - hs * 0.1, y - hs * 0.5, hs * 0.2, hs * 0.8);
+  // Punta
+  beginShape(TRIANGLES);
+  vertex(x - hs * 0.2, y + hs * 0.3);
+  vertex(x + hs * 0.2, y + hs * 0.3);
+  vertex(x, y + hs * 0.6);
+  endShape();
+}
+
+// Plus (signo más)
+void drawIconPlus(float x, float y, float s) {
+  float hs = s / 2;
+  float w = hs * 0.2;
+  noStroke();
+  rect(x - w, y - hs * 0.7, w * 2, hs * 1.4, 1);
+  rect(x - hs * 0.7, y - w, hs * 1.4, w * 2, 1);
+}
+
+// Trash (basurero)
+void drawIconTrash(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  // Cuerpo
+  rect(x - hs * 0.35, y - hs * 0.1, hs * 0.7, hs * 0.6, 1);
+  // Tapa
+  rect(x - hs * 0.45, y - hs * 0.3, hs * 0.9, hs * 0.15, 1);
+  // Líneas en el cuerpo
+  stroke(255);
+  strokeWeight(1);
+  float lx = x;
+  for (int i = 0; i < 2; i++) {
+    line(lx, y - hs * 0.05, lx, y + hs * 0.42);
+    lx += hs * 0.25;
+  }
+  noStroke();
+}
+
+// Help-circle (círculo con interrogación)
+void drawIconHelpCircle(float x, float y, float s) {
+  float r = s / 2;
+  noStroke();
+  ellipse(x, y, s, s);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(s * 0.7);
+  text("?", x, y);
+}
+
+// Book-simple (libro cerrado simple para tarjetas)
+void drawIconBookSimple(float x, float y, float s) {
+  float hs = s / 2;
+  noStroke();
+  rect(x - hs * 0.5, y - hs * 0.7, hs * 1.0, hs * 1.4, 2);
+  fill(255, 200);
+  rect(x - hs * 0.15, y - hs * 0.4, hs * 0.3, hs * 0.8, 1);
 }
