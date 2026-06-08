@@ -1,0 +1,152 @@
+{
+  "workshops": [
+    {
+      "title": "Invenciones que cambiaron la humanidad",
+      "content": "A lo largo de la historia, los seres humanos han creado inventos que transformaron la forma en que vivimos. Algunos de estos inventos son tan antiguos que no podemos imaginar la vida sin ellos.\n\nLa rueda fue inventada hace más de 5.000 años en Mesopotamia. Al principio se usaba para hacer cerámica, pero pronto las personas descubrieron que podían usarla para transportar cosas. Con la rueda nacieron los carros, los carruajes y, miles de años después, los automóviles y los trenes.\n\nLa imprenta fue otro invento revolucionario. Antes de su creación, los libros se copiaban a mano, uno por uno, lo que tomaba meses o años. En el siglo XV, Johannes Gutenberg inventó la imprenta de tipos móviles, permitiendo imprimir cientos de libros en el mismo tiempo que antes tomaba hacer uno solo. Esto permitió que el conocimiento se difundiera rápidamente por todo el mundo.\n\nLa electricidad cambió todo. Aunque ya se conocían algunos fenómenos eléctricos desde la antigüedad, fue en el siglo XIX cuando inventores como Thomas Edison y Nikola Tesla desarrollaron formas prácticas de generar y usar electricidad. La bombilla eléctrica, el motor eléctrico y la transmisión de corriente alterna transformaron para siempre los hogares, las fábricas y las ciudades.\n\nEn el siglo XX, la invención del computador y después Internet cambiaron el mundo una vez más. Los primeros computadores ocupaban habitaciones enteras y solo los usaban gobiernos y universidades. Hoy llevamos uno en el bolsillo más potente que aquellos. Internet conectó a miles de millones de personas, permitiendo compartir información al instante desde cualquier lugar del planeta.\n\nCada uno de estos inventos comenzó con una idea en la mente de alguien. Detrás de cada gran invento hay creatividad, esfuerzo y muchas pruebas. Así como estos inventores cambiaron el mundo, tú también puedes hacerlo.",
+      "questions": [
+        {
+          "text": "¿Hace cuántos años fue inventada la rueda aproximadamente?",
+          "options": [
+            "1.000 años",
+            "5.000 años",
+            "10.000 años",
+            "100 años"
+          ],
+          "correctIndex": 1
+        },
+        {
+          "text": "¿Quién inventó la imprenta de tipos móviles?",
+          "options": [
+            "Thomas Edison",
+            "Nikola Tesla",
+            "Johannes Gutenberg",
+            "Albert Einstein"
+          ],
+          "correctIndex": 2
+        },
+        {
+          "text": "¿En qué siglo se desarrollaron las formas prácticas de usar electricidad?",
+          "options": [
+            "Siglo XV",
+            "Siglo XVIII",
+            "Siglo XIX",
+            "Siglo XXI"
+          ],
+          "correctIndex": 2
+        },
+        {
+          "text": "¿Qué permitió la imprenta según el texto?",
+          "options": [
+            "Construir castillos más rápido",
+            "Que el conocimiento se difundiera rápidamente",
+            "Viajar a otros países",
+            "Curar enfermedades"
+          ],
+          "correctIndex": 1
+        },
+        {
+          "text": "¿Qué invento del siglo XX conectó a miles de millones de personas?",
+          "options": [
+            "La bombilla eléctrica",
+            "El automóvil",
+            "Internet",
+            "La televisión"
+          ],
+          "correctIndex": 2
+        }
+      ]
+    },
+    {
+      "title": "Matemáticas: Fracciones",
+      "content": "Las fracciones son una forma de representar partes de un todo. Imagina que tienes una pizza y la divides en 8 porciones iguales. Si te comes 3 porciones, te has comido 3/8 (tres octavos) de la pizza.\n\nUna fracción tiene dos números: el numerador (arriba) y el denominador (abajo). El numerador indica cuántas partes tomamos, y el denominador indica en cuántas partes dividimos el total.\n\nPara sumar fracciones con el mismo denominador, simplemente sumamos los numeradores y mantenemos el mismo denominador. Por ejemplo: 2/5 + 1/5 = 3/5.\n\nPara multiplicar fracciones, multiplicamos numerador por numerador y denominador por denominador. Por ejemplo: 2/3 × 3/4 = 6/12, que se puede simplificar a 1/2.\n\nLas fracciones equivalentes son aquellas que representan la misma cantidad pero con diferentes números. Por ejemplo: 1/2, 2/4 y 4/8 son equivalentes, todas representan la mitad de algo.\n\n¡Practica con las preguntas!",
+      "questions": [
+        {
+          "text": "¿Qué indica el numerador en una fracción?",
+          "options": [
+            "En cuántas partes dividimos el total",
+            "Cuántas partes tomamos",
+            "El total de la pizza",
+            "El resultado de la división"
+          ],
+          "correctIndex": 1
+        },
+        {
+          "text": "¿Cuánto es 2/5 + 1/5?",
+          "options": [
+            "3/10",
+            "2/5",
+            "3/5",
+            "1/5"
+          ],
+          "correctIndex": 2
+        },
+        {
+          "text": "¿Qué fracción es equivalente a 1/2?",
+          "options": [
+            "1/4",
+            "3/4",
+            "2/4",
+            "2/3"
+          ],
+          "correctIndex": 2
+        },
+        {
+          "text": "¿Cuánto es 2/3 × 3/4?",
+          "options": [
+            "6/12",
+            "5/7",
+            "1/1",
+            "6/7"
+          ],
+          "correctIndex": 0
+        }
+      ]
+    },
+    {
+      "title": "Ciencias: El Sistema Solar",
+      "content": "El Sistema Solar está formado por el Sol y todos los cuerpos celestes que orbitan a su alrededor. El Sol es una estrella, una enorme esfera de gas caliente que produce energía.\n\nNuestro Sistema Solar tiene ocho planetas. En orden desde el Sol son: Mercurio, Venus, Tierra, Marte, Júpiter, Saturno, Urano y Neptuno.\n\nLos planetas se dividen en dos grupos: los planetas rocosos (Mercurio, Venus, Tierra y Marte) que tienen superficie sólida, y los planetas gaseosos (Júpiter, Saturno, Urano y Neptuno) que están compuestos principalmente de gas.\n\nLa Tierra es el único planeta conocido que tiene vida. Esto es posible porque está a la distancia perfecta del Sol, tiene agua líquida y una atmósfera que nos protege.\n\nLa Luna es el satélite natural de la Tierra y tarda aproximadamente 28 días en dar una vuelta completa a nuestro planeta.\n\n¿Sabías que Júpiter es el planeta más grande del Sistema Solar? Es tan grande que podrían caber más de 1.300 Tierras dentro de él.",
+      "questions": [
+        {
+          "text": "¿Cuántos planetas tiene nuestro Sistema Solar?",
+          "options": [
+            "Siete",
+            "Ocho",
+            "Nueve",
+            "Diez"
+          ],
+          "correctIndex": 1
+        },
+        {
+          "text": "¿Cuál es el planeta más grande del Sistema Solar?",
+          "options": [
+            "Saturno",
+            "Neptuno",
+            "Júpiter",
+            "La Tierra"
+          ],
+          "correctIndex": 2
+        },
+        {
+          "text": "¿Qué tipo de planeta es Marte?",
+          "options": [
+            "Gaseoso",
+            "Rocoso",
+            "Líquido",
+            "Estrella"
+          ],
+          "correctIndex": 1
+        },
+        {
+          "text": "¿Cuánto tarda la Luna en dar una vuelta a la Tierra?",
+          "options": [
+            "7 días",
+            "14 días",
+            "28 días",
+            "365 días"
+          ],
+          "correctIndex": 2
+        }
+      ]
+    }
+  ]
+}
